@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import styles from './Careers.module.css';
 import { EMPTY, JOBS } from './jobs';
+import Robot from './Robot';
 
 const DESIGN_W = 1440;
 const WIDE_MIN = 1920;
@@ -143,6 +144,9 @@ export default function Careers() {
             </div>
 
             <span className={styles.divider} aria-hidden />
+
+            {/* idle state: the G1 follows the cursor; an opening role sweeps over it */}
+            <Robot active={!open && requested === null} />
 
             <div className={styles.meta}>
               <p className={styles.tags}>{(job ? job.tags : EMPTY.tags).map((t) => `[ ${t} ]`).join('  ')}</p>

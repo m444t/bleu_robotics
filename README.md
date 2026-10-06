@@ -29,6 +29,16 @@ npm run dev        # http://localhost:3000
 - `components/careers/Careers.tsx` — picking a role slides the panel's divider bar from top to bottom, revealing the text above it; switching roles slides it up, swaps, and slides it down again.
 - `components/careers/jobs.ts` — the roles (titles 2–4 are placeholders).
 
+### Robot (careers, idle state)
+
+`public/models/g1.glb` is exported from the Blender file (Unitree G1 FK rig): the armature, its parented meshes and the *Pose Controls* empty, **Animation mode: Actions**, Draco compression (level 6, position 14 / normal 10 bits). `components/careers/Robot.tsx` loads it with three.js and scrubs the NLA actions by cursor instead of playing them:
+
+- `Look_LeftRight` (waist_yaw_link) — frames 45 → 75 → 105 follow cursor x
+- `Look_UpDown` (torso_link) — frames 36 → 60 → 84 follow cursor y
+- `Base_ArmsDown` holds the arms
+
+Each clip is cut down to the bones it actually animates, so both run at once and the robot turns and tilts together, eased.
+
 ## Footer
 
 - `components/footer/Footer.tsx` — over the last 343 design-px of scroll the footer opens from 343 to 686 tall (its bottom stays on the viewport bottom, so it pushes the page up); fully open, the drawing draws on.

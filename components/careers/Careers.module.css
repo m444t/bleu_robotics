@@ -334,6 +334,37 @@
   background: linear-gradient(var(--grey-light), var(--grey-light)) center / calc(100% - 18px) 2px no-repeat;
 }
 
+/* the robot fills the space between the divider and the tags, anchored to the
+   bottom so the descending divider sweeps over it */
+.robot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 0 0 -24px;
+  width: 720px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 600ms var(--ease);
+}
+
+.robot[data-ready] {
+  opacity: 1;
+}
+
+.careers[data-open] .robot {
+  opacity: 0;
+  transition-duration: var(--open-ms);
+}
+
+.robotCanvas {
+  position: absolute;
+  left: 0;
+  bottom: 36px;
+  display: block;
+  width: 720px;
+  height: 590px;
+}
+
 .meta {
   margin-top: auto;
 }
@@ -447,6 +478,23 @@
 
 .careers[data-layout='mobile'] .meta {
   margin-top: 40px;
+}
+
+.careers[data-layout='mobile'] .robot {
+  flex: none;
+  width: calc(100% + 32px);
+  height: 320px;
+  margin-left: -16px;
+}
+
+.careers[data-layout='mobile'][data-open] .robot {
+  height: 0;
+}
+
+.careers[data-layout='mobile'] .robotCanvas {
+  bottom: 0;
+  width: 100%;
+  height: 320px;
 }
 
 .careers[data-layout='mobile'] .tags {
