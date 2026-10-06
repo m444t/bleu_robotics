@@ -1,0 +1,25 @@
+{
+  "name": "bleu-robotics-hero",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "bake": "node scripts/bake-media.mjs",
+    "prepare:vision": "node scripts/prepare-vision.mjs",
+    "bake:team": "node scripts/bake-team.mjs"
+  },
+  "dependencies": {
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "sharp": "0.35.5",
+    "typescript": "^5"
+  }
+}

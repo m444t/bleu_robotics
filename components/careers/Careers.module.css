@@ -1,0 +1,466 @@
+/* Open positions — Figma 1440 × 938, laid out in design px and scaled by --k. */
+
+.careers {
+  --blue: #00088e;
+  --navy: #001027;
+  --grey-light: #efefef;
+  --ease: cubic-bezier(0.5, 0, 0.5, 1);
+  --k: 1;
+  --open-h: 587px;
+
+  position: relative;
+  background: var(--grey-light);
+  color: var(--navy);
+}
+
+.frame {
+  position: relative;
+  width: calc(1440px * var(--k));
+  height: calc(938px * var(--k));
+  margin: 0 auto;
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1440px;
+  height: 938px;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+}
+
+.canvas > * {
+  position: absolute;
+}
+
+.label {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.72px;
+  text-transform: uppercase;
+  font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+/* ---- left column ---- */
+
+.heading {
+  left: 90px;
+  top: 119.24px;
+  width: 358px;
+  margin: 0;
+  color: var(--blue);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 500;
+  font-size: 38px;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  font-feature-settings: 'zero' 1, 'case' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.list {
+  left: 90px;
+  top: 184px;
+  width: 460px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* the highlight box hangs 4px outside the text so the text never shifts */
+.item {
+  composes: label;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-left: -4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--navy);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 260ms var(--ease),
+    color 260ms var(--ease);
+}
+
+@media (hover: hover) {
+  .item:hover {
+    background: var(--navy);
+    color: #fff;
+  }
+}
+
+.item[aria-pressed='true'] {
+  background: var(--blue);
+  color: #fff;
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.note {
+  left: 90px;
+  bottom: 117px;
+  width: 271px;
+  margin: 0;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* ---- panel ---- */
+
+.panel {
+  left: 627px;
+  top: 58px;
+  width: 720px;
+  height: 787px;
+  padding: 84px 0 31px 24px;
+  display: flex;
+  flex-direction: column;
+  background: #ddd;
+}
+
+.code {
+  composes: label;
+  position: absolute;
+  left: 24px;
+  top: 26.19px;
+  margin: 0;
+}
+
+/* grey while idle, step colours once a role is open */
+.swatches {
+  position: absolute;
+  left: 614px;
+  top: 23.24px;
+  display: flex;
+  height: 20px;
+}
+
+.swatches i {
+  display: block;
+  height: 20px;
+  transition: background-color 450ms var(--ease);
+}
+
+.swatches i:nth-child(1) {
+  width: 48px;
+  background: #808080;
+}
+
+.swatches i:nth-child(2) {
+  width: 20px;
+  background: #c1c1c1;
+}
+
+.swatches i:nth-child(3) {
+  width: 15px;
+  background: var(--grey-light);
+}
+
+.careers[data-selected] .swatches i:nth-child(1) {
+  background: var(--blue);
+}
+
+.careers[data-selected] .swatches i:nth-child(2) {
+  background: #fc5c04;
+}
+
+.careers[data-selected] .swatches i:nth-child(3) {
+  background: #ffd920;
+}
+
+/* the role's text lives above the divider; the divider's travel reveals it */
+.content {
+  position: relative;
+  flex: none;
+  width: 678px;
+  height: 0;
+  overflow: hidden;
+  transition: height var(--close-ms) var(--ease);
+}
+
+.careers[data-open] .content {
+  height: var(--open-h);
+  transition-duration: var(--open-ms);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cta {
+  display: flex;
+  width: 673px;
+  height: 32px;
+  text-decoration: none;
+}
+
+.ctaLabel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: var(--blue);
+  color: var(--grey-light);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: 'case' 1, 'ss05' 1, 'zero' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.ctaArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: var(--blue);
+  transition: background-color 260ms var(--ease);
+}
+
+.ctaArrow img {
+  width: 16.25px;
+  height: 12.5px;
+}
+
+@media (hover: hover) {
+  .cta:hover .ctaArrow {
+    background: #fe5c3c;
+  }
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.intro {
+  width: 585px;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  font-variation-settings: 'opsz' 14;
+}
+
+.intro p {
+  margin: 0;
+}
+
+.intro p + p {
+  margin-top: 1.3em;
+}
+
+.group {
+  margin-top: 5px;
+}
+
+.group + .group {
+  margin-top: 0;
+}
+
+.groupHeading {
+  composes: label;
+  margin: 0 0 4px;
+}
+
+.group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* light bar with wedge ends (Figma "divider / h top"), centred 3px above the content edge */
+.divider {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 718px;
+  height: 11.55px;
+  margin: -8.77px 0 0 -23px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 11.55px;
+  background: var(--grey-light);
+}
+
+.divider::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 41.3%, 100% 58.7%, 0 100%);
+}
+
+.divider::after {
+  right: 0;
+  clip-path: polygon(100% 0, 0 41.3%, 0 58.7%, 100% 100%);
+}
+
+.divider {
+  background: linear-gradient(var(--grey-light), var(--grey-light)) center / calc(100% - 18px) 2px no-repeat;
+}
+
+.meta {
+  margin-top: auto;
+}
+
+.tags {
+  composes: label;
+  margin: 0 0 6.6px 7px;
+  white-space: pre;
+}
+
+.barcode {
+  display: block;
+  width: 673px;
+  height: 31px;
+  padding: 0 8px;
+  overflow: hidden;
+}
+
+.barcode img {
+  display: block;
+  width: 312.6px;
+  height: 31px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile: stacked                                                      */
+/* ------------------------------------------------------------------ */
+
+.careers[data-layout='mobile'] .frame {
+  width: 100%;
+  height: auto;
+}
+
+.careers[data-layout='mobile'] .canvas {
+  position: static;
+  width: 100%;
+  height: auto;
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 56px 16px;
+}
+
+.careers[data-layout='mobile'] .canvas > * {
+  position: relative;
+  left: auto;
+  top: auto;
+  bottom: auto;
+}
+
+.careers[data-layout='mobile'] .heading {
+  width: auto;
+  font-size: 30px;
+}
+
+.careers[data-layout='mobile'] .list {
+  width: 100%;
+}
+
+.careers[data-layout='mobile'] .item {
+  white-space: normal;
+}
+
+.careers[data-layout='mobile'] .note {
+  width: auto;
+}
+
+.careers[data-layout='mobile'] .panel {
+  width: 100%;
+  height: auto;
+  min-height: 260px;
+  padding: 64px 16px 16px;
+}
+
+.careers[data-layout='mobile'] .code {
+  left: 16px;
+}
+
+.careers[data-layout='mobile'] .swatches {
+  left: auto;
+  right: 16px;
+}
+
+.careers[data-layout='mobile'] .content,
+.careers[data-layout='mobile'] .cta,
+.careers[data-layout='mobile'] .intro {
+  width: 100%;
+}
+
+.careers[data-layout='mobile'] .ctaLabel {
+  white-space: normal;
+  font-size: 13px;
+  text-align: center;
+}
+
+.careers[data-layout='mobile'] .cta {
+  height: auto;
+  min-height: 32px;
+}
+
+.careers[data-layout='mobile'] .group ul,
+.careers[data-layout='mobile'] .intro {
+  font-size: 15px;
+}
+
+.careers[data-layout='mobile'] .divider {
+  width: calc(100% + 32px);
+  margin-left: -16px;
+}
+
+.careers[data-layout='mobile'] .meta {
+  margin-top: 40px;
+}
+
+.careers[data-layout='mobile'] .tags {
+  white-space: normal;
+  margin-left: 0;
+}
+
+.careers[data-layout='mobile'] .barcode {
+  width: 100%;
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    transition: none;
+  }
+}

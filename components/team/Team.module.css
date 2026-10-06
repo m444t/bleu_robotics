@@ -1,0 +1,264 @@
+/*
+ * Team — Figma 1440 × 811, scaled by --k. The window edges --wl/--wt/--wr/--wb
+ * are registered custom properties (globals.css), so one transition on the
+ * section moves the grid lines and the clean-image clip together.
+ */
+
+.team {
+  --blue: #00088e;
+  --navy: #001027;
+  --line: #efefef;
+  --ease: cubic-bezier(0.5, 0, 0.5, 1);
+  --k: 1;
+
+  /* resting window: almost the whole frame */
+  --wl: 91.25px;
+  --wt: 89.87px;
+  --wr: 1348px;
+  --wb: 719px;
+
+  position: relative;
+  background: #ddd;
+  /* like the hero intro: right/bottom lead, left/top follow */
+  transition:
+    --wr 900ms var(--ease),
+    --wb 900ms var(--ease),
+    --wl 900ms var(--ease) 100ms,
+    --wt 900ms var(--ease) 100ms;
+}
+
+/* Jean-Baptiste: the window closes in on his head */
+.team[data-focus='jean'] {
+  --wl: 131px;
+  --wt: 103px;
+  --wr: 292px;
+  --wb: 296px;
+}
+
+.frame {
+  position: relative;
+  width: calc(1440px * var(--k));
+  height: calc(811px * var(--k));
+  margin: 0 auto;
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1440px;
+  height: 811px;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+  overflow: hidden;
+}
+
+/* ---- media: one photo box shared by both layers ---- */
+
+.media {
+  position: absolute;
+  left: 46px;
+  top: 45px;
+  width: 1346.6px;
+  height: 719px;
+  overflow: hidden;
+}
+
+.photo {
+  position: absolute;
+  left: 0;
+  top: -89.3px;
+  width: 1346.6px;
+  height: 897.7px;
+  max-width: none;
+  user-select: none;
+}
+
+.clean {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(
+    calc(var(--wt) - 45px) calc(1392.6px - var(--wr)) calc(764px - var(--wb)) calc(var(--wl) - 46px)
+  );
+}
+
+.hotspot {
+  position: absolute;
+  left: 105px;
+  top: 166px;
+  width: 210px;
+  height: 589px;
+}
+
+/* ---- grid ---- */
+
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1440px;
+  height: 1px;
+  background: var(--line);
+}
+
+.hTop {
+  transform: translateY(calc(var(--wt) - 0.5px));
+}
+
+.hBottom {
+  transform: translateY(calc(var(--wb) - 0.5px));
+}
+
+.vLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 811px;
+  background: var(--line);
+}
+
+.vLeft {
+  transform: translateX(calc(var(--wl) - 0.5px));
+}
+
+.vRight {
+  transform: translateX(calc(var(--wr) - 0.5px));
+}
+
+.capL,
+.capR,
+.capT,
+.capB {
+  position: absolute;
+  background: var(--line);
+}
+
+.capL,
+.capR {
+  top: -4.15px;
+  width: 8px;
+  height: 9.3px;
+}
+
+.capL {
+  left: 0;
+  clip-path: polygon(0 0, 100% 41%, 100% 59%, 0 100%);
+}
+
+.capR {
+  right: 0;
+  clip-path: polygon(100% 0, 0 41%, 0 59%, 100% 100%);
+}
+
+.capT,
+.capB {
+  left: -4.15px;
+  width: 9.3px;
+  height: 8px;
+}
+
+.capT {
+  top: 0;
+  clip-path: polygon(0 0, 100% 0, 59% 100%, 41% 100%);
+}
+
+.capB {
+  bottom: 0;
+  clip-path: polygon(41% 0, 59% 0, 100% 100%, 0 100%);
+}
+
+/* ---- team list ---- */
+
+.listDesktop {
+  position: absolute;
+  left: 91px;
+  top: 563px;
+}
+
+.listMobile {
+  display: none;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.listHead,
+.tag {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 6px 10px;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.72px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.listHead {
+  gap: 16px;
+  background: var(--navy);
+  color: var(--line);
+}
+
+.listHead img {
+  width: 14px;
+  height: 14px;
+}
+
+.tag {
+  border: 0;
+  border-radius: 0;
+  background: var(--blue);
+  color: var(--line);
+  transition:
+    background-color 300ms var(--ease),
+    color 300ms var(--ease);
+}
+
+button.tag {
+  cursor: pointer;
+}
+
+.tag[data-active] {
+  background: #fff;
+  color: var(--navy);
+}
+
+.tag:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---- mobile: photo scales as a whole, the list sits underneath ---- */
+
+.team[data-layout='mobile'] .listDesktop {
+  display: none;
+}
+
+.team[data-layout='mobile'] .listMobile {
+  display: block;
+  padding: 16px 16px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team {
+    transition: none;
+  }
+}

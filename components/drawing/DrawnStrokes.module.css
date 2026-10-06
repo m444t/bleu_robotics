@@ -1,0 +1,18 @@
+.draw {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--dur) cubic-bezier(0.5, 0, 0.5, 1) var(--delay) forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

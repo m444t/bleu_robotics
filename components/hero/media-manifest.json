@@ -1,0 +1,23 @@
+[
+  {
+    "id": "robot-demo",
+    "clean": "/media/robot-demo-clean.webp",
+    "treated": "/media/robot-demo-treated.webp",
+    "width": 2560,
+    "height": 1390
+  },
+  {
+    "id": "food-packing",
+    "clean": "/media/food-packing-clean.webp",
+    "treated": "/media/food-packing-treated.webp",
+    "width": 1828,
+    "height": 1210
+  },
+  {
+    "id": "robot-detail",
+    "clean": "/media/robot-detail-clean.webp",
+    "treated": "/media/robot-detail-treated.webp",
+    "width": 1900,
+    "height": 970
+  }
+]

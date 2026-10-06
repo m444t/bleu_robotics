@@ -1,0 +1,23 @@
+{
+  "teach": {
+    "src": "/vision/teach-lines.webp",
+    "left": -0.293,
+    "top": -2.335,
+    "width": 660,
+    "height": 688
+  },
+  "train": {
+    "src": "/vision/train-lines.webp",
+    "left": -0.301,
+    "top": -1.169,
+    "width": 659,
+    "height": 686
+  },
+  "operate": {
+    "src": "/vision/operate-lines.webp",
+    "left": -0.301,
+    "top": -1.8,
+    "width": 660,
+    "height": 687
+  }
+}

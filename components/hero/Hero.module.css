@@ -1,0 +1,628 @@
+/*
+ * All geometry comes from CSS variables written by Hero.tsx:
+ *   --stage-t / --stage-b   media viewport (navbar bottom, headline panel top)
+ *   --stage-h               unitless stage height (for scaleY on vertical rules)
+ *   --win-l/t/r/b           grid intersections = clean-image window
+ *   --mx-i / --my-i / --ms-i  media framing of slide i (shared by both layers)
+ */
+
+.hero {
+  --blue: #00088e;
+  --navy: #001027;
+  --orange: #fe5c3c;
+  --grey-light: #efefef;
+  --line: #efefef;
+  --label-features: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+  /* shared motion curve (lib/motion.ts) */
+  --ease: cubic-bezier(0.5, 0, 0.5, 1);
+
+  /* desktop scales with the width up to the 1920 breakpoint, then holds */
+  --col: min(100vw, 1920px);
+  --hero-h: 100vh;
+  --stage-t: -2px;
+  --stage-b: var(--hero-h);
+  --stage-h: 0;
+  --win-l: 0px;
+  --win-t: 0px;
+  --win-r: 0px;
+  --win-b: 0px;
+  --ui: 0;
+
+  position: relative;
+  height: var(--hero-h);
+  overflow: hidden;
+  background: var(--grey-light);
+  isolation: isolate;
+}
+
+/* nothing structural is shown until the first frame has been computed */
+.hero:not([data-ready]) .grid,
+.hero:not([data-ready]) .imageUi,
+.hero:not([data-ready]) .nav,
+.hero:not([data-ready]) .panel {
+  visibility: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* LAYER 1 + 2 — media                                                  */
+/* ------------------------------------------------------------------ */
+
+.treated,
+.clean {
+  position: absolute;
+  inset: 0;
+}
+
+.treated {
+  background: var(--blue);
+  clip-path: inset(var(--stage-t) 0 calc(100% - var(--stage-b)) 0);
+}
+
+/* LAYER 3 — the reveal: a rectangle whose edges ARE the grid lines */
+.clean {
+  clip-path: inset(var(--win-t) calc(100% - var(--win-r)) calc(100% - var(--win-b)) var(--win-l));
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.track[data-visible] {
+  visibility: visible;
+}
+
+.media {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  opacity: 0;
+  transition: opacity 320ms var(--ease);
+}
+
+.hero[data-loaded] .media {
+  opacity: 1;
+}
+
+.hero[data-intro='running'] .track:first-child .media {
+  will-change: transform;
+}
+
+.media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+/* leading edge of an incoming slide: an orange rule that sweeps the frame */
+.edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--orange);
+  display: none;
+}
+
+.track[data-entering='next'] .edge {
+  display: block;
+  left: 0;
+}
+
+.track[data-entering='prev'] .edge {
+  display: block;
+  right: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* LAYER 4 — grid                                                       */
+/* ------------------------------------------------------------------ */
+
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--line);
+}
+
+.hTop {
+  transform: translate3d(0, calc(var(--win-t) - 0.5px), 0);
+}
+
+.hBottom {
+  transform: translate3d(0, calc(var(--win-b) - 0.5px), 0);
+}
+
+.vLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 0;
+}
+
+.vLeft {
+  transform: translate3d(calc(var(--win-l) - 0.5px), var(--stage-t), 0);
+}
+
+.vRight {
+  transform: translate3d(calc(var(--win-r) - 0.5px), var(--stage-t), 0);
+}
+
+.rule {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  background: var(--line);
+  transform-origin: 0 0;
+  transform: scaleY(var(--stage-h));
+}
+
+/* end caps: small wedges, wide at the stage edge, tapering into the rule */
+.capL,
+.capR,
+.capT,
+.capB {
+  position: absolute;
+  background: var(--line);
+}
+
+.capL,
+.capR {
+  top: -4.15px;
+  width: 8px;
+  height: 9.3px;
+}
+
+.capL {
+  left: 0;
+  clip-path: polygon(0 0, 100% 41%, 100% 59%, 0 100%);
+}
+
+.capR {
+  right: 0;
+  clip-path: polygon(100% 0, 0 41%, 0 59%, 100% 100%);
+}
+
+.capT,
+.capB {
+  left: -4.15px;
+  width: 9.3px;
+  height: 8px;
+  top: 0;
+}
+
+.capT {
+  clip-path: polygon(0 0, 100% 0, 59% 100%, 41% 100%);
+}
+
+.capB {
+  clip-path: polygon(41% 0, 59% 0, 100% 100%, 0 100%);
+  transform: translateY(calc(var(--stage-b) - var(--stage-t) - 8px));
+}
+
+/* ------------------------------------------------------------------ */
+/* LAYER 5 — image UI (attached to window corners)                      */
+/* ------------------------------------------------------------------ */
+
+.imageUi {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.imageUi > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+}
+
+/* top-left intersection */
+.deco {
+  transform: translate3d(var(--win-l), var(--win-t), 0);
+  display: flex;
+  align-items: flex-start;
+  width: 445px;
+  max-width: calc(100vw - 32px);
+  height: 28px;
+  padding: 4px;
+  background: #ddd;
+  overflow: hidden;
+}
+
+.swatches {
+  display: flex;
+  height: 20px;
+  flex: none;
+}
+
+.swatches i {
+  display: block;
+  height: 20px;
+}
+
+.code {
+  flex: 1 0 auto;
+  display: flex;
+}
+
+.code b {
+  display: block;
+  padding: 4px;
+  background: var(--navy);
+  color: #ddd;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the barcode is the part that gives way when the strip gets narrow */
+.barcode {
+  flex: 0 1 254.373px;
+  min-width: 0;
+  display: block;
+  height: 19.956px;
+  object-fit: cover;
+  object-position: left center;
+}
+
+/* bottom-left intersection */
+.info {
+  transform: translate3d(var(--win-l), calc(var(--win-b) - 26px), 0);
+  opacity: var(--ui);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 428px;
+  height: 26px;
+  padding: 6px 10px;
+  background: var(--blue);
+  overflow: hidden;
+}
+
+.label {
+  margin: 0;
+  height: 14.4px;
+  overflow: hidden;
+  flex: none;
+  color: var(--grey-light);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.72px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: var(--label-features);
+}
+
+.roll {
+  display: block;
+}
+
+.roll[data-anim] {
+  animation: roll-in 520ms var(--ease) both;
+}
+
+.roll[data-anim='-1'] {
+  animation-name: roll-in-down;
+}
+
+@keyframes roll-in {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+@keyframes roll-in-down {
+  from {
+    transform: translateY(-105%);
+  }
+}
+
+.progress {
+  position: absolute;
+  left: 306px;
+  top: 6px;
+  width: 132px;
+  height: 14px;
+  padding: 2.5px 18px 2.5px 10px;
+  display: flex;
+  gap: 4px;
+}
+
+.progress span {
+  display: block;
+  width: 24px;
+  height: 9px;
+  background: #fff;
+  transition:
+    width 600ms var(--ease),
+    background-color 600ms var(--ease);
+}
+
+.progress span[data-active] {
+  width: 48px;
+  background: var(--orange);
+}
+
+/* bottom-right intersection */
+.arrows {
+  transform: translate3d(calc(var(--win-r) - 52px), calc(var(--win-b) - 26px), 0);
+  opacity: var(--ui);
+  display: flex;
+}
+
+.arrows button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 160ms var(--ease);
+}
+
+.arrows button:disabled {
+  cursor: default;
+}
+
+.arrows button:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.prev {
+  background: var(--grey-light);
+}
+
+.prev .icon {
+  transform: scaleX(-1);
+}
+
+.next {
+  background: var(--blue);
+}
+
+@media (hover: hover) {
+  .prev:not(:disabled):hover {
+    background: #ddd;
+  }
+
+  .next:not(:disabled):hover {
+    background: var(--orange);
+  }
+}
+
+/* 20×20 icon box, arrow inset as in the design system */
+.icon {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.icon img {
+  position: absolute;
+  inset: 18.75% 12.5% 18.75% 6.25%;
+  width: 16.25px;
+  height: 12.5px;
+}
+
+/* ------------------------------------------------------------------ */
+/* LAYER 6 — navbar + headline panel                                    */
+/* ------------------------------------------------------------------ */
+
+.nav {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 56px;
+  /* rides the top stage boundary */
+  transform: translate3d(0, calc(var(--stage-t) - 56px), 0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* side padding = gutter outside the 1920 column + the design's 92px margin */
+  padding: 12px max(16px, calc((100% - min(100%, 1920px)) / 2 + min(100%, 1920px) * 92 / 1440));
+  background: var(--grey-light);
+  z-index: 2;
+}
+
+.logo {
+  display: flex;
+  gap: 4.655px;
+  align-items: flex-start;
+  width: 98px;
+  height: 32.044px;
+}
+
+.logo img:first-child {
+  width: 24.439px;
+  height: 32.428px;
+}
+
+.logo img:last-child {
+  width: 68.527px;
+  height: 28.489px;
+  align-self: center;
+  margin-bottom: 1px;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 336px;
+  justify-content: flex-end;
+}
+
+.links a {
+  color: var(--navy);
+  text-decoration: none;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: var(--label-features);
+}
+
+.links a.cta {
+  display: flex;
+  height: 32px;
+  color: var(--grey-light);
+}
+
+.ctaLabel {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--blue);
+}
+
+.ctaArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: var(--blue);
+}
+
+@media (hover: hover) {
+  .links a:not(.cta):hover {
+    color: var(--blue);
+  }
+
+  .links a.cta:hover .ctaArrow {
+    background: var(--orange);
+  }
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--panel-h, 115px);
+  /* rides the bottom stage boundary */
+  transform: translate3d(0, var(--stage-b), 0);
+  background: var(--grey-light);
+  z-index: 2;
+}
+
+.panelInner {
+  display: grid;
+  grid-template-columns: calc(100% * 93 / 1440) calc(100% * 653 / 1440) calc(100% * 17 / 1440) calc(100% * 585 / 1440) 1fr;
+  align-items: start;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: calc(var(--col) * 9 / 1440) 0;
+}
+
+.headline {
+  grid-column: 2;
+  margin: 0;
+  color: var(--blue);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: max(28px, calc(var(--col) * 46 / 1440));
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.subline {
+  grid-column: 4;
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: max(15px, calc(var(--col) * 18 / 1440));
+  line-height: 1.3;
+  font-variation-settings: 'opsz' 14;
+  font-feature-settings: 'case' 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile: same system, stacked panel, slimmer UI                       */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+  .hero {
+    --hero-h: 100svh;
+  }
+
+  .links a:not(.cta) {
+    display: none;
+  }
+
+  .links {
+    width: auto;
+  }
+
+  .info {
+    width: calc(var(--win-r) - var(--win-l) - 56px);
+    max-width: 428px;
+    gap: 10px;
+  }
+
+  .caption {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .caption .roll {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .progress {
+    display: none;
+  }
+
+  .panelInner {
+    display: block;
+    padding: 20px 16px 28px;
+  }
+
+  .headline {
+    font-size: 32px;
+  }
+
+  .subline {
+    margin-top: 14px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll[data-anim] {
+    animation: none;
+  }
+}

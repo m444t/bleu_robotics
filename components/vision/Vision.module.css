@@ -1,0 +1,509 @@
+/*
+ * "Vision" — a tall scroll track with a sticky stage. On desktop the Figma
+ * composition (1440 × 762) is laid out in design px and scaled by --k.
+ */
+
+.vision {
+  --blue: #00088e;
+  --navy: #001027;
+  --grey-light: #efefef;
+  /* one response curve for hover colours and the cursor-follow */
+  --react-ease: cubic-bezier(0.5, 0, 0.5, 1); /* shared motion curve (lib/motion.ts) */
+  --react-dur: 600ms;
+  --k: 1;
+  --fig-s: 1;
+  --follow: 0px;
+
+  position: relative;
+  /* scroll distance each step holds before the next one takes over */
+  --step-scroll: 100svh;
+  /* one viewport of stage + one band per step */
+  height: calc(100svh + var(--steps) * var(--step-scroll));
+  background: var(--grey-light);
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.frame {
+  position: relative;
+  width: calc(1440px * var(--k));
+  height: calc(762px * var(--k));
+  flex: none;
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1440px;
+  height: 762px;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+}
+
+.canvas > * {
+  position: absolute;
+}
+
+/* ------------------------------------------------------------------ */
+
+.heading {
+  left: 165px;
+  top: 152px;
+  width: 409px;
+  margin: 0;
+  color: var(--blue);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 500;
+  font-size: 38px;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  font-feature-settings: 'zero' 1, 'case' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+/* ---- figure ---- */
+
+.figure {
+  left: 783px;
+  top: 39px;
+  width: 657px;
+  height: 684px;
+}
+
+.panel,
+.pop,
+.linesClip {
+  position: absolute;
+  inset: 0;
+}
+
+.panel {
+  background: #c1c1c1;
+}
+
+/* before the section is reached, the figure waits hidden, panel closed onto the box */
+.vision[data-figure='waiting'] .pop {
+  opacity: 0;
+}
+
+.vision[data-figure='waiting'] .panel,
+.vision[data-figure='waiting'] .linesClip {
+  clip-path: inset(68px 60px 48px 64px);
+}
+
+.box {
+  position: absolute;
+  left: 64px;
+  top: 68px;
+  width: 533px;
+  height: 568px;
+  background: var(--blue);
+  transform: translate3d(0, var(--follow), 0);
+  transition: transform var(--react-dur) var(--react-ease);
+}
+
+/* ---- line drawing: strokes draw on, then the textured raster takes over ---- */
+
+.art {
+  position: absolute;
+  inset: 0;
+}
+
+.lines {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  animation: art-in 320ms var(--react-ease) var(--draw-total) forwards;
+}
+
+.strokes {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 657px;
+  height: 684px;
+  overflow: visible;
+  animation: art-out 320ms var(--react-ease) var(--draw-total) forwards;
+}
+
+@keyframes art-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes art-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---- scroll strip ---- */
+
+.scrollStrip {
+  left: 65px;
+  top: 156px;
+  width: 64px;
+  height: 521px;
+  display: flex;
+}
+
+.scrollBar {
+  position: relative;
+  width: 30px;
+  height: 100%;
+  background: var(--navy);
+}
+
+/* reads bottom-to-top; the leading arrow ends up pointing down */
+.scrollText {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: #ddd;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: pre;
+}
+
+.scrollArrow {
+  display: inline-block;
+}
+
+/* the container is rotated 180°, so local −Y is screen down */
+.vision[data-idle] .scrollArrow {
+  animation: nudge 2s var(--react-ease) infinite;
+}
+
+@keyframes nudge {
+  0%,
+  40%,
+  100% {
+    transform: translateY(0);
+  }
+  18% {
+    transform: translateY(-2px);
+  }
+}
+
+.scrollBarcode {
+  position: relative;
+  width: 34px;
+  height: 100%;
+}
+
+.scrollBarcode img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 521px;
+  height: 34px;
+  max-width: none;
+  transform-origin: 0 0;
+  transform: translateX(34px) rotate(90deg);
+}
+
+/* ---- step tab ---- */
+
+.tab {
+  left: 65px;
+  top: 106px;
+  width: 64px;
+  height: 161px;
+  background: var(--step-color);
+  color: var(--step-ink);
+  transition:
+    background-color var(--react-dur) var(--react-ease),
+    color var(--react-dur) var(--react-ease);
+}
+
+.tabIcon {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 48px;
+  height: 92px;
+  background: currentColor;
+  mask: url('/vision/tab-icon-mask.png') center / contain no-repeat;
+  -webkit-mask: url('/vision/tab-icon-mask.png') center / contain no-repeat;
+}
+
+.tabLabel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 143px;
+  text-align: center;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 10.383px;
+  line-height: 1;
+  text-transform: uppercase;
+  animation: copy-in 520ms var(--react-ease) both;
+}
+
+/* ---- text card ---- */
+
+.card {
+  left: 129px;
+  top: 417px;
+  width: 654px;
+  height: 260px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.cardGrid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.copy {
+  position: absolute;
+  left: 40px;
+  top: 32px;
+  width: 506px;
+  animation: copy-in 520ms var(--react-ease) both;
+}
+
+@keyframes copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.label {
+  margin: 0;
+  color: var(--blue);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.72px;
+  text-transform: uppercase;
+  font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.title {
+  max-width: 380px;
+  margin: 16px 0 12px;
+  color: var(--blue);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  font-feature-settings: 'zero' 1, 'case' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.body {
+  max-width: 450px;
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* ---- 01 / 02 / 03 ---- */
+
+.buttons {
+  left: 655px;
+  top: 417px;
+  display: flex;
+}
+
+.button {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--ink);
+  /* the small delay keeps quick fly-overs from flickering */
+  transition:
+    background-color var(--react-dur) var(--react-ease) 60ms,
+    color var(--react-dur) var(--react-ease) 60ms;
+}
+
+@media (hover: hover) {
+  .button:hover {
+    background: var(--hover-bg);
+    color: var(--hover-ink);
+  }
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: 24.178px;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  font-feature-settings: 'zero' 1, 'case' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.cTL,
+.cTR,
+.cBL,
+.cBR {
+  position: absolute;
+  width: 18.133px;
+  height: 18.133px;
+  overflow: visible;
+}
+
+.cTL {
+  left: 8.533px;
+  top: 8.533px;
+  transform: scaleY(-1);
+}
+
+.cTR {
+  right: 8.533px;
+  top: 8.533px;
+  transform: rotate(180deg);
+}
+
+.cBL {
+  left: 8.533px;
+  bottom: 8.533px;
+}
+
+.cBR {
+  right: 8.533px;
+  bottom: 8.533px;
+  transform: scaleX(-1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile: same pieces, stacked                                         */
+/* ------------------------------------------------------------------ */
+
+.vision[data-layout='mobile'] .frame {
+  width: 100%;
+  height: 100%;
+}
+
+.vision[data-layout='mobile'] .canvas {
+  position: static;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px;
+}
+
+.vision[data-layout='mobile'] .canvas > * {
+  position: relative;
+  left: auto;
+  top: auto;
+}
+
+.vision[data-layout='mobile'] .heading {
+  width: auto;
+  font-size: 26px;
+}
+
+.vision[data-layout='mobile'] .figure {
+  flex: none;
+  transform: scale(var(--fig-s));
+  transform-origin: 0 0;
+  margin-bottom: calc(684px * var(--fig-s) - 684px);
+  margin-right: calc(657px * var(--fig-s) - 657px);
+}
+
+.vision[data-layout='mobile'] .scrollStrip,
+.vision[data-layout='mobile'] .tab {
+  display: none;
+}
+
+.vision[data-layout='mobile'] .buttons {
+  order: 3;
+  margin-bottom: -16px;
+}
+
+.vision[data-layout='mobile'] .card {
+  order: 4;
+  width: 100%;
+  height: auto;
+}
+
+.vision[data-layout='mobile'] .copy {
+  position: relative;
+  left: 0;
+  top: 0;
+  width: auto;
+  padding: 20px 16px 24px;
+}
+
+.vision[data-layout='mobile'] .title {
+  font-size: 24px;
+  margin-top: 10px;
+}
+
+.vision[data-layout='mobile'] .body {
+  font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box {
+    transition: none;
+  }
+
+  .lines {
+    animation: none;
+    opacity: 1;
+  }
+
+  .strokes {
+    display: none;
+  }
+
+  .copy,
+  .tabLabel,
+  .vision[data-idle] .scrollArrow {
+    animation: none;
+  }
+}
