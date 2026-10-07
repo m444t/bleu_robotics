@@ -49,6 +49,7 @@ export default function Hero() {
     s.setProperty('--win-r', `${f.winR}px`);
     s.setProperty('--win-b', `${f.winB}px`);
     s.setProperty('--ui', `${f.ui}`);
+    s.setProperty('--fx', `${f.fx}`);
     const text = readout(f.count);
     if (readoutRef.current!.textContent !== text) readoutRef.current!.textContent = text;
   }, []);

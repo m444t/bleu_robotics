@@ -3,6 +3,7 @@
  *   --stage-t / --stage-b   media viewport (navbar bottom, headline panel top)
  *   --stage-h               unitless stage height (for scaleY on vertical rules)
  *   --win-l/t/r/b           grid intersections = clean-image window
+ *   --fx                    0 → 1: the treated layer draws in from full view to its band
  *   --mx-i / --my-i / --ms-i  media framing of slide i (shared by both layers)
  */
 
@@ -27,6 +28,9 @@
   --win-r: 0px;
   --win-b: 0px;
   --ui: 0;
+  --fx: 1;
+  /* the treated band around the clean window: as wide as the team photo's (45 at 1440) */
+  --tb: calc(var(--col) * 45 / 1440);
 
   position: relative;
   /* above the later sections, so the fixed navbar stays on top of them */
@@ -55,9 +59,19 @@
   inset: 0;
 }
 
+/*
+ * Full view while the intro loads (--fx 0: the whole stage); then, with the headline
+ * panel, it draws in to a band --tb wide around the clean window (--fx 1), the grey
+ * page showing beyond it — like the team photo.
+ */
 .treated {
   background: var(--blue);
-  clip-path: inset(var(--stage-t) 0 calc(100% - var(--stage-b)) 0);
+  clip-path: inset(
+    calc(var(--stage-t) + (var(--win-t) - var(--tb) - var(--stage-t)) * var(--fx))
+      calc((100% - var(--win-r) - var(--tb)) * var(--fx))
+      calc(100% - var(--stage-b) - (var(--win-b) + var(--tb) - var(--stage-b)) * var(--fx))
+      calc((var(--win-l) - var(--tb)) * var(--fx))
+  );
 }
 
 /* LAYER 3 — the reveal: a rectangle whose edges ARE the grid lines */

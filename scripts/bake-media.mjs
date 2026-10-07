@@ -9,7 +9,9 @@ import { applyGradientMap, histogramMatchLut } from './gradient-map.mjs';
 const OUT_DIR = 'public/media';
 const MANIFEST = 'components/hero/media-manifest.json';
 const CLEAN_MAX_W = 2560;
-const TREATED_MAX_W = 1600; // ~1 image px per CSS px at 1440, so the dither grain stays crisp
+// the dither grain is one image px: baked this wide (upscaling smaller sources) it is
+// ~0.6 CSS px at 1440 — a finer grain than at 1600 (~1 CSS px)
+const TREATED_W = 2560;
 
 // Figma's treated input is a graded B/W frame; match every slide to its tonal distribution.
 const figmaInput = await sharp('sources/figma-treated-input.png').greyscale().raw().toBuffer();
@@ -92,7 +94,7 @@ for (const slide of SLIDES) {
   const cleanW = Math.min(width, CLEAN_MAX_W);
   await sharp(comp).resize(cleanW).webp({ quality: 82 }).toFile(`${OUT_DIR}/${slide.id}-clean.webp`);
 
-  const treatedW = Math.min(width, TREATED_MAX_W);
+  const treatedW = TREATED_W;
   const treatedH = Math.round((treatedW / width) * height);
   const gray = await sharp(comp).resize(treatedW, treatedH, { fit: 'fill' }).greyscale().raw().toBuffer();
   const lut = histogramMatchLut(gray, figmaInput);

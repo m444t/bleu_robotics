@@ -21,6 +21,8 @@ export type Frame = {
   ui: number;
   /** header strip readout, counts 0 -> 255 */
   count: number;
+  /** 0 → 1: the treated layer draws in from full view to a thin band around the window */
+  fx: number;
 };
 
 export type MediaBox = { x: number; y: number; w: number };
@@ -69,8 +71,8 @@ export function computeLayout(heroW: number, panelContentH: number, viewportH: n
     return {
       heroW,
       heroH,
-      end: { stageT: NAV_H, stageB, winL, winT, winR, winB, ui: 1, count: 255 },
-      start: { stageT: -2, stageB: heroH, winL, winT: startT, winR, winB: startT + DECO_H, ui: 0, count: 0 },
+      end: { stageT: NAV_H, stageB, winL, winT, winR, winB, ui: 1, count: 255, fx: 1 },
+      start: { stageT: -2, stageB: heroH, winL, winT: startT, winR, winB: startT + DECO_H, ui: 0, count: 0, fx: 0 },
     };
   }
 
@@ -101,6 +103,7 @@ export function computeLayout(heroW: number, panelContentH: number, viewportH: n
       winB: stageB - (D.stageH - D.win.b) * k,
       ui: 1,
       count: 255,
+      fx: 1,
     },
     start: {
       // navbar parked fully above, media fills the whole hero
@@ -113,6 +116,7 @@ export function computeLayout(heroW: number, panelContentH: number, viewportH: n
       winB: startT + DECO_H,
       ui: 0,
       count: 0,
+      fx: 0,
     },
   };
 }
@@ -183,6 +187,8 @@ export function frameAt(layout: Layout, p: number): Frame {
     winB: lerp(s.winB, e.winB, local(p, SCHEDULE.winB)),
     ui: p >= SCHEDULE.ui ? e.ui : s.ui,
     count: Math.round(lerp(s.count, e.count, local(p, SCHEDULE.count))),
+    // with the headline panel coming up, the treated layer draws in to its band
+    fx: lerp(s.fx, e.fx, local(p, SCHEDULE.stageB)),
   };
 }
 
