@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import styles from './Careers.module.css';
 import { EMPTY, JOBS, type Job } from './jobs';
 import Robot from './Robot';
+import { ease } from '@/lib/motion';
 
 const DESIGN_W = 1440;
 const WIDE_MIN = 1920;
@@ -11,6 +12,10 @@ const MOBILE_MAX = 767;
 // the divider travels down to reveal a role, and back up before swapping roles
 const OPEN_MS = 900;
 const CLOSE_MS = 450;
+
+// the readout (code + tags) ticks to a new text like the hero's 000-000-255 counter
+const TICK_MS = 700;
+const GLYPHS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const tagLine = (tags: string[]) => tags.map((t) => `[ ${t} ]`).join('  ');
@@ -48,6 +53,52 @@ function useReveal<T>(requested: T | null) {
   }, [shown]);
 
   return { shown, open };
+}
+
+/**
+ * Text t (0 → 1) of the way from a to b: each character counts up or down
+ * through 0–9, A–Z to its new value, as the hero's readout counts to 255.
+ * Characters off that scale (brackets, spaces) count from / to 0 and flip at
+ * the end.
+ */
+function tick(a: string, b: string, t: number) {
+  if (t >= 1) return b;
+  let out = '';
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const ca = a[i] ?? ' ';
+    const cb = b[i] ?? ' ';
+    // the readout is set in caps, so letters count on one scale whatever their case
+    const ra = GLYPHS.indexOf(ca.toUpperCase());
+    const rb = GLYPHS.indexOf(cb.toUpperCase());
+    if (ca === cb || (ra < 0 && rb < 0)) out += t < 0.5 ? ca : cb;
+    else out += GLYPHS[Math.round(Math.max(ra, 0) + (Math.max(rb, 0) - Math.max(ra, 0)) * t)];
+  }
+  return out;
+}
+
+/** Renders `text`, ticking over from whatever it showed before. */
+function Ticker({ text }: { text: string }) {
+  const [shown, setShown] = useState(text);
+  const shownRef = useRef(text);
+
+  useEffect(() => {
+    const from = shownRef.current;
+    if (from === text) return;
+    const set = (s: string) => {
+      shownRef.current = s;
+      setShown(s);
+    };
+    if (reducedMotion()) return set(text);
+    const t0 = performance.now();
+    let raf = requestAnimationFrame(function step(now) {
+      const p = Math.min(1, (now - t0) / TICK_MS);
+      set(tick(from, text, ease(p)));
+      if (p < 1) raf = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [text]);
+
+  return shown;
 }
 
 /**
@@ -121,6 +172,9 @@ function DesktopCareers() {
   const [requested, setRequested] = useState<number | null>(null);
   const { shown, open } = useReveal(requested);
   const job = shown === null ? null : JOBS[shown];
+  // with no role open, hovering one previews its code + tags in the readout
+  const [hovered, setHovered] = useState<number | null>(null);
+  const readout = job ?? (requested === null && hovered !== null ? JOBS[hovered] : EMPTY);
 
   return (
     <div className={styles.frame} data-open={open ? 'true' : undefined}>
@@ -140,7 +194,10 @@ function DesktopCareers() {
                     className={styles.item}
                     aria-pressed={requested === i}
                     aria-controls="careers-panel"
-                    onClick={() => setRequested(i)}
+                    // clicking the open role again closes it, back to the robot
+                    onClick={() => setRequested((r) => (r === i ? null : i))}
+                    onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(i)}
+                    onPointerLeave={() => setHovered(null)}
                   >
                     <span className={styles.itemTitle}>{j.title} ↗</span>
                     <span className={styles.itemTags}>{tagLine(j.tags)}</span>
@@ -155,7 +212,9 @@ function DesktopCareers() {
 
         <div className={styles.panel} id="careers-panel" aria-live="polite">
           <div className={styles.head}>
-            <p className={styles.code}>[ {job ? job.code : EMPTY.code} ]</p>
+            <p className={styles.code}>
+              <Ticker text={`[ ${readout.code} ]`} />
+            </p>
             <span className={styles.swatches} aria-hidden>
               <i />
               <i />
@@ -181,14 +240,16 @@ function DesktopCareers() {
             </div>
           </div>
 
-          <span className={styles.divider} aria-hidden />
-
           {/* idle state: the G1 follows the cursor; an opening role sweeps over it */}
           <Robot active={!open && requested === null} />
 
+          <span className={styles.divider} aria-hidden />
+
           <div className={styles.foot}>
             <div className={styles.meta}>
-              <p className={styles.tags}>{tagLine(job ? job.tags : EMPTY.tags)}</p>
+              <p className={styles.tags}>
+                <Ticker text={tagLine(readout.tags)} />
+              </p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className={styles.barcode} src="/careers/barcode.svg" alt="" width={312.599} height={21} />
             </div>
@@ -281,11 +342,6 @@ function MobileCareers() {
           ),
         )}
       </ul>
-
-      {/* touch: the G1 eases a little as the page scrolls past it */}
-      <div className={styles.mRobot}>
-        <Robot active />
-      </div>
     </div>
   );
 }

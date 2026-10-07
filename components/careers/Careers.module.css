@@ -10,7 +10,6 @@
   --grey-light: #efefef;
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
   --k: 1;
-  --open-h: 514px;
 
   position: relative;
   background: var(--grey-light);
@@ -131,7 +130,8 @@
 }
 
 .note {
-  width: 405px;
+  /* three lines */
+  width: 296px;
   margin: 0;
   font: var(--t-body-m); /* Body/M */
   letter-spacing: var(--t-body-m-ls);
@@ -190,17 +190,22 @@
   background: #fff;
 }
 
-/* the role's text lives above the divider; the divider's travel reveals it */
+/*
+ * The role's text and the robot share the space above the divider: opening a
+ * role hands it from the robot to the text (flex-grow 0 ↔ 1 on both, same
+ * timing, so they always add up), the text's growing edge sweeping down over
+ * the robot.
+ */
 .content {
   position: relative;
-  flex: none;
-  height: 0;
+  flex: 0 1 0;
+  min-height: 0;
   overflow: hidden;
-  transition: height var(--close-ms) var(--ease);
+  transition: flex-grow var(--close-ms) var(--ease);
 }
 
 .frame[data-open] .content {
-  height: var(--open-h);
+  flex-grow: 1;
   transition-duration: var(--open-ms);
 }
 
@@ -305,6 +310,11 @@
   background: linear-gradient(var(--grey-light), var(--grey-light)) center / calc(100% - 18px) 2px no-repeat;
 }
 
+/* desktop: under the robot (and the opened text), 16px above the tags */
+.panel > .divider {
+  margin: -5.775px 0 calc(16px - 5.775px) -20px;
+}
+
 .divider::before,
 .divider::after {
   content: '';
@@ -325,16 +335,18 @@
   clip-path: polygon(100% 0, 0 41.3%, 0 58.7%, 100% 100%);
 }
 
-/* the robot fills the space between the divider and the footer row, anchored to
-   the bottom so the descending divider sweeps over it */
+/* the robot fills the space down to the divider, anchored to the bottom so the
+   opening text sweeps over it */
 .robot {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   margin: 0 -18px;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 600ms var(--ease);
+  transition:
+    opacity 600ms var(--ease),
+    flex-grow var(--close-ms) var(--ease);
 }
 
 .robot[data-ready] {
@@ -342,6 +354,7 @@
 }
 
 .frame[data-open] .robot {
+  flex-grow: 0;
   opacity: 0;
   transition-duration: var(--open-ms);
 }
@@ -522,22 +535,6 @@
   background: var(--blue);
   color: #fff;
   text-decoration: none;
-}
-
-.mRobot {
-  position: relative;
-  height: 320px;
-  background: #ddd;
-}
-
-.mRobot .robot {
-  height: 100%;
-  margin: 0;
-}
-
-.mRobot .robotCanvas {
-  width: 100%;
-  height: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,8 +1,8 @@
 /*
- * Desktop: the Figma footer (1440 wide) is laid out in design px and scaled by
- * --k. --fp (0 → 1) opens it from 343 to 686 tall; the band's top-anchored
- * parts (headline, drawing) stay put, the bottom-anchored ones (line, links,
- * cells) ride the bottom, so the middle opens up.
+ * Desktop: the Figma footer (522:4484, 1440 wide) is laid out in design px and
+ * scaled by --k. --fp (0 → 1) opens it from 267 to 610 tall; the band's top-anchored
+ * parts (links, drawing) stay put, the bottom-anchored ones (line, cells)
+ * ride the bottom, so the middle opens up.
  */
 
 .track {
@@ -12,17 +12,23 @@
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
   --k: 1;
   --fp: 0;
+  --gutter: 0px;
+  /* wide screens (Footer.tsx): --wide 0 at 1440 → 1 at 1920; left items move in by --d
+     (32 → 92), right items ease from their Figma inset to 92 — the careers column's edges */
+  --wide: 0;
+  --d: 0px;
+  --art-s: 1;
 
   position: relative;
   /* room for the fully open footer; while it opens, the unused part sits below the viewport */
-  height: calc(686px * var(--k));
+  height: calc(610px * var(--k));
   background: var(--blue);
 }
 
 .footer {
   position: absolute;
   inset: 0 0 auto;
-  height: calc((343px + 343px * var(--fp)) * var(--k));
+  height: calc((267px + 343px * var(--fp)) * var(--k));
   overflow: hidden;
   background: var(--blue);
 }
@@ -39,7 +45,7 @@
   left: 0;
   top: 0;
   width: 1440px;
-  height: calc(343px + 343px * var(--fp));
+  height: calc(267px + 343px * var(--fp));
   transform: scale(var(--k));
   transform-origin: 0 0;
   display: flex;
@@ -56,24 +62,13 @@
   position: absolute;
 }
 
-.headline {
-  left: 32px;
-  top: 37px;
-  width: 575px;
-  margin: 0;
-  font: var(--t-h1); /* Heading/h1 */
-  letter-spacing: var(--t-h1-ls);
-  text-transform: uppercase;
-  font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
-}
-
 /* ---- drawing: lives above the horizontal line, revealed as the band opens ---- */
 
 .graphic {
-  left: 610px;
+  left: calc(619px + var(--d));
   top: 0;
-  width: 833px;
-  height: calc(100% - 148px);
+  width: calc(825.25px * var(--art-s));
+  height: calc(100% - 87.7px);
   overflow: hidden;
   pointer-events: none;
 }
@@ -81,9 +76,9 @@
 .art {
   position: absolute;
   left: 0;
-  top: 24px;
-  width: 833px;
-  height: 380.65px;
+  top: calc(-34px * var(--art-s));
+  width: calc(825.25px * var(--art-s));
+  height: calc(500.34px * var(--art-s));
 }
 
 .svg {
@@ -106,17 +101,18 @@
 
 .labelText {
   fill: #efefef;
-  font-family: var(--font-space-mono), monospace;
-  font-size: 6.87px;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
 }
 
-/* ---- links ---- */
+/* ---- links: top left, where the headline used to be ---- */
 
 .links {
-  left: 1144px;
-  bottom: 191px;
+  left: calc(32px + var(--d));
+  top: 30px;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
 }
 
@@ -144,19 +140,26 @@
 
 /* ---- grid lines (filled elements with wedge caps, as in the hero) ---- */
 
+/* the upper line tops the cells row, the lower one closes it on the bar */
 .hLine {
-  left: 0;
-  bottom: 148px;
-  width: 1440px;
+  /* past 1920 the frame stops growing; the lines still run to the page edges */
+  left: calc(-1 * var(--gutter));
+  bottom: 87.7px;
+  width: calc(1440px + 2 * var(--gutter));
   height: 1.6px;
   background: var(--line);
 }
 
+.hLineLow {
+  bottom: 0;
+}
+
 .vLine {
-  left: 626.5px;
+  position: absolute;
+  left: calc(626.5px + var(--d));
   top: 0;
+  bottom: 0;
   width: 1.6px;
-  height: calc(100% - 148px);
   background: var(--line);
 }
 
@@ -205,23 +208,43 @@
 /* ---- teach / train / operate cells ---- */
 
 .cells {
-  left: 32px;
-  bottom: 24px;
-  width: 1376px;
+  left: calc(32px + var(--d));
+  bottom: 1px;
+  width: calc(1408px - var(--d));
+  height: 87px;
   display: flex;
 }
 
+/* 199 / 197 / 198 wide, then the logo; a vertical line at each cell's left edge
+   (x 32, 231, 428), running between the two horizontal lines */
 .cell {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 9.156px;
   padding: 9.156px;
-  border: 2.153px solid var(--line);
-  margin-left: -2.153px;
 }
 
-.cell:first-child {
-  margin-left: 0;
+.cell::before {
+  content: '';
+  position: absolute;
+  left: -0.8px;
+  top: 0;
+  bottom: 0;
+  width: 1.6px;
+  background: var(--line);
+}
+
+.cell:nth-child(1) {
+  width: 199px;
+}
+
+.cell:nth-child(2) {
+  width: 197px;
+}
+
+.cell:nth-child(3) {
+  width: 198px;
 }
 
 /* arrow-in-a-box pictogram (same artwork as the Vision tab, turned to point right) */
@@ -258,7 +281,12 @@
   flex: 1;
   align-self: stretch;
   justify-content: flex-end;
-  padding: 9.093px 22.888px;
+  padding: 9.093px calc(22.888px + 69.112px * var(--wide)) 9.093px 22.888px;
+}
+
+/* its left edge is the full-height vertical line */
+.logoCell::before {
+  display: none;
 }
 
 .logo {
@@ -287,11 +315,13 @@
   -webkit-mask: url('/icons/logo-word.svg') center / contain no-repeat;
 }
 
-/* ---- bottom bar ---- */
+/* ---- bottom bar: barcode, copyright (right-aligned), orange, yellow, in 12px of blue ---- */
 
 .bar {
   display: flex;
-  height: 31px;
+  height: 55px;
+  /* the barcode strip starts on the links' / cells' left edge (Figma has it 9px further left) */
+  padding: 12px calc(12px + 80px * var(--wide)) 12px calc(32px + var(--d));
   flex: none;
 }
 
@@ -299,11 +329,6 @@
   display: block;
   height: 100%;
   flex: none;
-}
-
-.barNavy {
-  width: 35px;
-  background: var(--navy);
 }
 
 .barcode {
@@ -318,10 +343,11 @@
 }
 
 .bar > .barText {
+  /* 901.75 at 1440 */
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 16px;
   background: var(--blue);
   color: #fff;
@@ -342,7 +368,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Mobile: same pieces stacked; no growth, the drawing plays in view    */
+/* Mobile: one grid; no growth, the drawing plays in view              */
 /* ------------------------------------------------------------------ */
 
 .track[data-layout='mobile'] {
@@ -358,18 +384,31 @@
   width: 100%;
 }
 
+/*
+ * links / drawing (48 under the links) / steps (160 under the drawing) /
+ * logo + swatches / copyright. The band, cells row and bar dissolve (display: contents) so their
+ * pieces sit straight on this grid.
+ */
 .track[data-layout='mobile'] .canvas {
   position: static;
   width: 100%;
   height: auto;
   transform: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  row-gap: 16px;
+  padding: 32px 16px 16px;
 }
 
-.track[data-layout='mobile'] .band {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 32px 16px 24px;
+.track[data-layout='mobile'] .band,
+.track[data-layout='mobile'] .cells,
+.track[data-layout='mobile'] .bar {
+  display: contents;
+}
+
+.track[data-layout='mobile'] .links {
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
 
 .track[data-layout='mobile'] .band > * {
@@ -379,38 +418,49 @@
   bottom: auto;
 }
 
-.track[data-layout='mobile'] .headline {
-  width: auto;
-}
-
+/* crop to the drawn part of the illustration (y 123 → 410 of its 500.34) */
 .track[data-layout='mobile'] .graphic {
+  grid-column: 1 / -1;
+  grid-row: 2;
   width: 100%;
   height: auto;
-  aspect-ratio: 833 / 380.65;
+  margin-top: 32px; /* + the 16 row gap = 48 under the links */
+  aspect-ratio: 825.25 / 287;
 }
 
 .track[data-layout='mobile'] .art {
-  top: 0;
+  top: calc(-123 / 287 * 100%);
   width: 100%;
-  height: 100%;
+  height: calc(500.34 / 287 * 100%);
 }
 
 .track[data-layout='mobile'] .hLine,
 .track[data-layout='mobile'] .vLine,
-.track[data-layout='mobile'] .barcode,
-.track[data-layout='mobile'] .barNavy {
+.track[data-layout='mobile'] .barcode {
   display: none;
 }
 
-.track[data-layout='mobile'] .cells {
-  width: 100%;
-  flex-wrap: wrap;
-}
-
 .track[data-layout='mobile'] .cell {
-  flex: 1 1 0;
+  grid-row: 3;
+  width: auto;
   padding: 6px;
   gap: 6px;
+  /* no grid lines on mobile: the three steps are boxed instead */
+  border: 1.6px solid var(--line);
+  margin-left: -1.6px;
+}
+
+.track[data-layout='mobile'] .cell:first-child {
+  margin-left: 0;
+}
+
+/* 160 under the drawing: 144 + the 16 row gap (the logo cell is a .cell too, but sits lower) */
+.track[data-layout='mobile'] .cell:not(.logoCell) {
+  margin-top: 144px;
+}
+
+.track[data-layout='mobile'] .cell::before {
+  display: none;
 }
 
 .track[data-layout='mobile'] .cellIcon {
@@ -449,15 +499,35 @@
   font-size: 10px;
 }
 
+/* bottom-left logo, the orange + yellow strip on the right of the same row */
 .track[data-layout='mobile'] .logoCell {
-  flex: 1 1 100%;
+  grid-row: 4;
+  grid-column: 1 / 3;
+  justify-content: flex-start;
+  border: 0;
   margin-left: 0;
-  margin-top: -2.153px;
-  padding: 12px 16px;
+  padding: 0;
+}
+
+.track[data-layout='mobile'] .bar > .barOrange,
+.track[data-layout='mobile'] .bar > .barYellow {
+  grid-row: 4;
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+  height: 31px;
+}
+
+.track[data-layout='mobile'] .bar > .barOrange {
+  margin-right: 23.25px;
 }
 
 .track[data-layout='mobile'] .bar > .barText {
-  padding: 0 10px;
+  grid-row: 5;
+  grid-column: 1 / -1;
+  width: auto;
+  justify-content: center;
+  padding: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -38,6 +38,8 @@ const DRAW_FROM = 0.7;
 const DRAW_TO = 0.17;
 const EXT_FROM = 0.17;
 const EXT_TO = 0.05;
+// the drawing trails the scroll a little: it eases toward the scroll-set amount with this time constant
+const DRAW_LAG_MS = 220;
 
 
 /* desktop: the grey column opens out from under a blue box once, on reaching the section */
@@ -153,6 +155,10 @@ export default function Vision() {
     // the drawing's own CSS animations, paused and scrubbed; fetched on first use
     const anims: (Animation[] | null)[] = items.map(() => null);
     const written = items.map(() => ({ draw: -1, open: -1 }));
+    // each graphic's drawn amount as shown, easing toward what the scroll asks for (-1: not yet set)
+    const shown = items.map(() => -1);
+    const lag = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : DRAW_LAG_MS;
+    let last = 0;
     let centers: number[] = [];
     let slot = 1;
     // design px from a centred graphic's panel edge to the screen edge
@@ -172,14 +178,22 @@ export default function Vision() {
       written.forEach((w) => (w.open = -1));
     };
 
-    const update = () => {
+    const update = (now: number) => {
       raf = 0;
+      const dt = last ? Math.min(100, now - last) : 0;
+      last = now;
+      const follow = lag ? 1 - Math.exp(-dt / lag) : 1;
+      let settling = false;
       const mid = window.scrollY + window.innerHeight / 2;
       let nearest = 0;
       centers.forEach((c, i) => {
         const u = Math.abs(c - mid) / slot;
         if (u < Math.abs(centers[nearest] - mid) / slot) nearest = i;
-        const draw = clamp01((DRAW_FROM - u) / (DRAW_FROM - DRAW_TO));
+        const target = clamp01((DRAW_FROM - u) / (DRAW_FROM - DRAW_TO));
+        let draw = shown[i] < 0 ? target : shown[i] + (target - shown[i]) * follow;
+        if (Math.abs(target - draw) < 0.002) draw = target;
+        else settling = true;
+        shown[i] = draw;
         const open = ease(clamp01((EXT_FROM - u) / (EXT_FROM - EXT_TO)));
         const w = written[i];
         if (draw !== w.draw) {
@@ -198,6 +212,9 @@ export default function Vision() {
         }
       });
       select(nearest);
+      // keep easing after the scroll stops, until every drawing has caught up
+      if (settling) raf = requestAnimationFrame(update);
+      else last = 0;
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -208,7 +225,7 @@ export default function Vision() {
     };
 
     measure();
-    update();
+    update(performance.now());
     window.addEventListener('scroll', onScroll, { passive: true });
     // auto snap: the browser's own scroll snapping onto the graphics (scroll-snap-align
     // in the CSS), so the scroll lands on one as it ends instead of gliding after it

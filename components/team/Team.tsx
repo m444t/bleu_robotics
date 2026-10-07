@@ -38,8 +38,11 @@ export default function Team() {
     const root = rootRef.current!;
     const fit = () => {
       const w = root.clientWidth;
+      const k = Math.min(w, WIDE_MIN) / DESIGN_W;
       root.dataset.layout = w <= MOBILE_MAX ? 'mobile' : 'desktop';
-      root.style.setProperty('--k', `${Math.min(w, WIDE_MIN) / DESIGN_W}`);
+      root.style.setProperty('--k', `${k}`);
+      // past 1920 the frame stops growing: the margin beside it, in design px, for the lines to reach the page edges
+      root.style.setProperty('--gutter', `${(w - DESIGN_W * k) / 2 / k}px`);
     };
     fit();
     const ro = new ResizeObserver(fit);

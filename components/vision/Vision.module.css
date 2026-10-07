@@ -27,6 +27,16 @@
   background: var(--grey-light);
 }
 
+/*
+ * The track ends half a viewport past the last panel so that panel can sit
+ * centred while the left column stays pinned. That tail is empty: let the next
+ * section ride up over it, so the gap under the grey column matches the one
+ * between the blog and the team photo.
+ */
+.vision[data-layout='desktop'] {
+  margin-bottom: calc(342px * var(--k) - 50svh);
+}
+
 .stage {
   position: sticky;
   top: 0;
@@ -546,11 +556,11 @@
   display: none;
 }
 
-/* buttons + card run edge to edge, no side padding */
+/* buttons + card run edge to edge, no side padding, flush with the graphic above and the card below */
 .vision[data-layout='mobile'] .buttons {
   order: 3;
   width: calc(100% + 32px);
-  margin: 0 -16px -16px;
+  margin: -16px -16px;
 }
 
 /* the active button fills the row and shows its label; the others stay square */

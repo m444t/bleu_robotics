@@ -10,6 +10,7 @@
   --line: #efefef;
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
   --k: 1;
+  --gutter: 0px;
 
   /* resting window: almost the whole frame */
   --wl: 91.25px;
@@ -18,6 +19,8 @@
   --wb: 719px;
 
   position: relative;
+  /* the grid lines run out past the frame to the page edges; clip them there */
+  overflow: hidden;
   background: #ddd;
   /* like the hero intro: right/bottom lead, left/top follow */
   transition:
@@ -50,6 +53,10 @@
   height: 811px;
   transform: scale(var(--k));
   transform-origin: 0 0;
+}
+
+/* mobile: the zoomed photo must not spill onto the list below */
+.team[data-layout='mobile'] .canvas {
   overflow: hidden;
 }
 
@@ -126,9 +133,9 @@
 
 .hLine {
   position: absolute;
-  left: 0;
+  left: calc(-1 * var(--gutter));
   top: 0;
-  width: 1440px;
+  width: calc(1440px + 2 * var(--gutter));
   height: 1px;
   background: var(--line);
 }
