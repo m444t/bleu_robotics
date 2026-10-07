@@ -13,6 +13,10 @@
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
   --dur: 320ms;
   --col: min(100vw, 1920px);
+  /* title + description sized like the Vision card's (Heading/h3, Body/M), which scale
+     with the page from 1440 up to the 1920 column */
+  --title-fs: max(28px, calc(var(--col) * 28 / 1440));
+  --text-fs: max(16px, calc(var(--col) * 16 / 1440));
   /* band: 208 at 1440, growing to 20% wider (249.6) by 1920 */
   --band-w: clamp(208px, 208px + (100vw - 1440px) * 0.0867, 249.6px);
 
@@ -148,12 +152,13 @@
 }
 
 .title {
-  flex: 0 1 294px;
+  /* wide enough for two lines at the larger size */
+  flex: 0 1 max(360px, calc(var(--col) * 360 / 1440));
   margin-left: 33px;
   color: var(--ink);
-  /* no text style in Figma: Space Grotesk Bold 23.32 / 100%, -1% */
-  font: 700 23.32px/1 var(--sg);
-  letter-spacing: -0.01em;
+  font: var(--t-h3); /* Heading/h3, as the Vision card title */
+  font-size: var(--title-fs);
+  letter-spacing: var(--t-h3-ls);
   text-transform: uppercase;
   font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
   transition: color var(--dur) var(--ease);
@@ -194,7 +199,8 @@
 
 .excerpt {
   color: var(--navy);
-  font: var(--t-body-m); /* Body/M */
+  font: var(--t-body-m); /* Body/M, as the Vision card text */
+  font-size: var(--text-fs);
   letter-spacing: var(--t-body-m-ls);
   font-variation-settings: 'opsz' 14;
   font-feature-settings: 'case' 1;
