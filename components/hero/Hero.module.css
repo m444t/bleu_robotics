@@ -29,6 +29,8 @@
   --ui: 0;
 
   position: relative;
+  /* above the later sections, so the fixed navbar stays on top of them */
+  z-index: 50;
   height: var(--hero-h);
   overflow: hidden;
   background: var(--grey-light);
@@ -305,11 +307,8 @@
   overflow: hidden;
   flex: none;
   color: var(--grey-light);
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 1.2;
-  letter-spacing: 0.72px;
+  font: var(--t-label-m); /* Label/M */
+  letter-spacing: var(--t-label-m-ls);
   text-transform: uppercase;
   white-space: nowrap;
   font-feature-settings: var(--label-features);
@@ -406,7 +405,7 @@
   background: var(--blue);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .prev:not(:disabled):hover {
     background: #ddd;
   }
@@ -437,12 +436,12 @@
 /* ------------------------------------------------------------------ */
 
 .nav {
-  position: absolute;
+  /* fixed: slides in with the intro (riding the top stage boundary), then stays on screen */
+  position: fixed;
   left: 0;
   top: 0;
   width: 100%;
   height: 56px;
-  /* rides the top stage boundary */
   transform: translate3d(0, calc(var(--stage-t) - 56px), 0);
   display: flex;
   align-items: center;
@@ -450,7 +449,8 @@
   /* side padding = gutter outside the 1920 column + the design's 92px margin */
   padding: 12px max(16px, calc((100% - min(100%, 1920px)) / 2 + min(100%, 1920px) * 92 / 1440));
   background: var(--grey-light);
-  z-index: 2;
+  /* over the headline panel and image UI once the page scrolls under it */
+  z-index: 5;
 }
 
 .logo {
@@ -484,10 +484,8 @@
 .links a {
   color: var(--navy);
   text-decoration: none;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 1;
+  font: var(--t-label-l); /* Label/L */
+  letter-spacing: var(--t-label-l-ls);
   text-transform: uppercase;
   white-space: nowrap;
   font-feature-settings: var(--label-features);
@@ -514,7 +512,7 @@
   background: var(--blue);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .links a:not(.cta):hover {
     color: var(--blue);
   }
@@ -549,11 +547,10 @@
   grid-column: 2;
   margin: 0;
   color: var(--blue);
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-  font-size: max(28px, calc(var(--col) * 46 / 1440));
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  font: var(--t-h1); /* Heading/h1 */
+  /* exact up to 1440; above it grows with the wide composition like the scaled sections */
+  font-size: max(46px, calc(var(--col) * 46 / 1440));
+  letter-spacing: var(--t-h1-ls);
   text-transform: uppercase;
   font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
 }
@@ -562,9 +559,9 @@
   grid-column: 4;
   margin: 0;
   color: var(--navy);
-  font-family: var(--font-dm-sans), sans-serif;
-  font-size: max(15px, calc(var(--col) * 18 / 1440));
-  line-height: 1.3;
+  font: var(--t-body-l); /* Body/L */
+  font-size: max(18px, calc(var(--col) * 18 / 1440));
+  letter-spacing: var(--t-body-l-ls);
   font-variation-settings: 'opsz' 14;
   font-feature-settings: 'case' 1;
 }
@@ -612,12 +609,12 @@
   }
 
   .headline {
-    font-size: 32px;
+    font: var(--t-h1);
   }
 
   .subline {
     margin-top: 14px;
-    font-size: 16px;
+    font: var(--t-body-l);
   }
 }
 

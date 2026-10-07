@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "bake": "node scripts/bake-media.mjs",
-    "prepare:vision": "node scripts/prepare-vision.mjs",
+    "prepare:vision": "node scripts/prepare-vision.mjs && node scripts/vision-labels.mjs",
     "bake:team": "node scripts/bake-team.mjs"
   },
   "dependencies": {

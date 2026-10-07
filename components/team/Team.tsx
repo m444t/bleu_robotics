@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import styles from './Team.module.css';
 
 const DESIGN_W = 1440;
@@ -26,7 +26,13 @@ const MEMBERS: Member[] = [
  */
 export default function Team() {
   const rootRef = useRef<HTMLElement>(null);
-  const [focus, setFocus] = useState<Member['id'] | null>(null);
+  const [focus, setFocusState] = useState<Member['id'] | null>(null);
+  // the last person focused: keeps the zoom origin in place while zooming back out
+  const [zoomed, setZoomed] = useState<Member['id'] | null>(null);
+  const setFocus = (id: Member['id'] | null) => {
+    setFocusState(id);
+    if (id) setZoomed(id);
+  };
 
   useLayoutEffect(() => {
     const root = rootRef.current!;
@@ -41,11 +47,21 @@ export default function Team() {
     return () => ro.disconnect();
   }, []);
 
+  // the press that leads to a click: a tap also fires focus first, so the click must
+  // toggle from the state before the tap; with a mouse, hover already does the work
+  const press = useRef({ on: false, mouse: false });
   const bind = (id: Member['id']) =>
     id
       ? {
-          onMouseEnter: () => setFocus(id),
-          onMouseLeave: () => setFocus(null),
+          // hover only for a real mouse; touch goes through the click
+          onPointerEnter: (e: PointerEvent) => e.pointerType === 'mouse' && setFocus(id),
+          onPointerLeave: (e: PointerEvent) => e.pointerType === 'mouse' && setFocus(null),
+          onPointerDown: (e: PointerEvent) => (press.current = { on: focus === id, mouse: e.pointerType === 'mouse' }),
+          // touch toggles; keyboard clicks (detail 0) have no press, so they toggle from the current state
+          onClick: (e: MouseEvent) => {
+            if (e.detail === 0) setFocus(focus === id ? null : id);
+            else if (!press.current.mouse) setFocus(press.current.on ? null : id);
+          },
           onFocus: () => setFocus(id),
           onBlur: () => setFocus(null),
         }
@@ -65,7 +81,6 @@ export default function Team() {
               type="button"
               className={styles.tag}
               data-active={focus === m.id ? 'true' : undefined}
-              onClick={() => setFocus((f) => (f === m.id ? null : m.id))}
               {...bind(m.id)}
             >
               {m.name}
@@ -79,40 +94,49 @@ export default function Team() {
   );
 
   return (
-    <section ref={rootRef} className={styles.team} data-focus={focus ?? undefined} aria-label="The team">
+    <section
+      ref={rootRef}
+      className={styles.team}
+      data-focus={focus ?? undefined}
+      data-zoom={zoomed ?? undefined}
+      aria-label="The team"
+    >
       <div className={styles.frame}>
         <div className={styles.canvas}>
-          {/* LAYER 1 + 2: treated photo, clean photo revealed through the window */}
-          <div className={styles.media} aria-hidden>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className={styles.photo} src="/media/team-treated.webp" alt="" />
-            <div className={styles.clean}>
+          {/* mobile: tapping a person zooms the photo (and its grid) in on them, frame unchanged */}
+          <div className={styles.zoom}>
+            {/* LAYER 1 + 2: treated photo, clean photo revealed through the window */}
+            <div className={styles.media} aria-hidden>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className={styles.photo} src="/media/team-clean.webp" alt="" />
+              <img className={styles.photo} src="/media/team-treated.webp" alt="" />
+              <div className={styles.clean}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className={styles.photo} src="/media/team-clean.webp" alt="" />
+              </div>
             </div>
-          </div>
-          <span className="sr-only">The Bleu Robotics team in the lab with their robots.</span>
+            <span className="sr-only">The Bleu Robotics team in the lab with their robots.</span>
 
-          {/* hover target over Jean-Baptiste in the photo */}
-          <span className={styles.hotspot} aria-hidden {...bind('jean')} />
+            {/* hover target over Jean-Baptiste in the photo */}
+            <span className={styles.hotspot} aria-hidden {...bind('jean')} />
 
-          {/* LAYER 3: grid — the window's edges */}
-          <div className={styles.grid} aria-hidden>
-            <div className={`${styles.hLine} ${styles.hTop}`}>
-              <span className={styles.capL} />
-              <span className={styles.capR} />
-            </div>
-            <div className={`${styles.hLine} ${styles.hBottom}`}>
-              <span className={styles.capL} />
-              <span className={styles.capR} />
-            </div>
-            <div className={`${styles.vLine} ${styles.vLeft}`}>
-              <span className={styles.capT} />
-              <span className={styles.capB} />
-            </div>
-            <div className={`${styles.vLine} ${styles.vRight}`}>
-              <span className={styles.capT} />
-              <span className={styles.capB} />
+            {/* LAYER 3: grid — the window's edges */}
+            <div className={styles.grid} aria-hidden>
+              <div className={`${styles.hLine} ${styles.hTop}`}>
+                <span className={styles.capL} />
+                <span className={styles.capR} />
+              </div>
+              <div className={`${styles.hLine} ${styles.hBottom}`}>
+                <span className={styles.capL} />
+                <span className={styles.capR} />
+              </div>
+              <div className={`${styles.vLine} ${styles.vLeft}`}>
+                <span className={styles.capT} />
+                <span className={styles.capB} />
+              </div>
+              <div className={`${styles.vLine} ${styles.vRight}`}>
+                <span className={styles.capT} />
+                <span className={styles.capB} />
+              </div>
             </div>
           </div>
 

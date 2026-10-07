@@ -53,6 +53,32 @@
   overflow: hidden;
 }
 
+/*
+ * ---- mobile zoom ----
+ * Tapping a person scales the photo, window and grid to 150% about that person
+ * (--zoom-origin, canvas px); the frame keeps its size and ratio and crops.
+ */
+
+.zoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: var(--zoom-origin, 50% 50%);
+  transition: transform 900ms var(--ease);
+}
+
+/*
+ * Jean-Baptiste: centred on him, head just below the top of the frame. Keyed on
+ * the last person zoomed (data-zoom), not the current focus, so zooming back out
+ * runs about the same point and retraces the zoom in.
+ */
+.team[data-zoom='jean'] {
+  --zoom-origin: 210px 220px;
+}
+
+.team[data-layout='mobile'][data-focus] .zoom {
+  transform: scale(1.5);
+}
+
 /* ---- media: one photo box shared by both layers ---- */
 
 .media {
@@ -201,11 +227,8 @@
   align-items: center;
   height: 26px;
   padding: 6px 10px;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 1.2;
-  letter-spacing: 0.72px;
+  font: var(--t-label-m); /* Label/M */
+  letter-spacing: var(--t-label-m-ls);
   text-transform: uppercase;
   white-space: nowrap;
   font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
@@ -258,7 +281,8 @@ button.tag {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .team {
+  .team,
+  .zoom {
     transition: none;
   }
 }

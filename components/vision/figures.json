@@ -4,20 +4,23 @@
     "left": -0.293,
     "top": -2.335,
     "width": 660,
-    "height": 688
+    "height": 688,
+    "labels": "/vision/teach-labels.webp"
   },
   "train": {
     "src": "/vision/train-lines.webp",
     "left": -0.301,
     "top": -1.169,
     "width": 659,
-    "height": 686
+    "height": 686,
+    "labels": "/vision/train-labels.webp"
   },
   "operate": {
     "src": "/vision/operate-lines.webp",
     "left": -0.301,
     "top": -1.8,
     "width": 660,
-    "height": 687
+    "height": 687,
+    "labels": "/vision/operate-labels.webp"
   }
 }

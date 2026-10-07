@@ -1,15 +1,22 @@
-/* Blog teaser — Figma 1440 wide: 48 / 92 padding, rows 1256 wide. */
+/*
+ * Blog teaser — Figma 450:12008 (1440 wide: 64 / 92 padding, 1256-wide rows of
+ * 73). Rows rest grey; the lit row turns white and its band takes the post's
+ * colour (--band/--lines/--chip-* are set per post in Blog.tsx).
+ */
 
 .blog {
   --blue: #00088e;
   --navy: #001027;
+  --grey: #808080;
+  --grey-mid: #c1c1c1;
   --grey-light: #efefef;
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
+  --dur: 320ms;
   --col: min(100vw, 1920px);
 
   background: var(--grey-light);
   /* side padding = gutter outside the 1920 column + the design's 92px margin */
-  padding: 48px max(16px, calc((100% - min(100%, 1920px)) / 2 + var(--col) * 92 / 1440));
+  padding: 64px max(16px, calc((100% - min(100%, 1920px)) / 2 + var(--col) * 92 / 1440));
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -19,11 +26,8 @@
   max-width: 804px;
   margin: 0;
   color: var(--blue);
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 500;
-  font-size: 38px;
-  line-height: 1.05;
-  letter-spacing: -0.015em;
+  font: var(--t-h2); /* Heading/h2 */
+  letter-spacing: var(--t-h2-ls);
   font-feature-settings: 'zero' 1, 'case' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
 }
 
@@ -39,17 +43,42 @@
 /* ---- row ---- */
 
 .row {
+  /* resting: everything grey */
+  --b: var(--grey);
+  --l: var(--grey-light);
+  --cb: #fff;
+  --ci: var(--grey-light);
+  --ink: var(--navy);
+  --accent: var(--grey);
+  --bar-1: var(--grey);
+  --bar-2: var(--grey-mid);
+  --bar-3: #fff;
+
   position: relative;
   display: flex;
-  align-items: stretch;
-  min-height: 91px;
+  align-items: flex-start;
+  min-height: 73px;
+  padding-left: 208px;
   background: var(--grey-light);
-  color: inherit;
+  /* white on the resting rows; invisible once the row turns white */
+  border: 2px solid #fff;
+  border-left: 0;
+  color: var(--ink);
   text-decoration: none;
-  transition: background-color 320ms var(--ease);
+  transition: background-color var(--dur) var(--ease);
 }
 
 .row[data-lit] {
+  --b: var(--band);
+  --l: var(--lines);
+  --cb: var(--chip-border);
+  --ci: var(--chip-ink);
+  --ink: var(--blue);
+  --accent: var(--blue);
+  --bar-1: #fe5c3c;
+  --bar-2: #ffbc2b;
+  --bar-3: var(--navy);
+
   background: #fff;
 }
 
@@ -58,194 +87,309 @@
   outline-offset: 2px;
 }
 
-/* pattern band: grey at rest, blue when lit; the light line pattern sits on top */
-.band {
-  position: relative;
-  flex: none;
-  width: 117px;
-  overflow: hidden;
-  background: #c1c1c1;
-  transition: background-color 320ms var(--ease);
-}
+/* ---- band: colour field + recolourable line drawing + date chip ---- */
 
-.row[data-lit] .band {
-  background: var(--blue);
+.band {
+  position: absolute;
+  left: 0;
+  top: -2px;
+  bottom: -2px;
+  width: 208px;
+  overflow: hidden;
+  background: var(--b);
+  transition: background-color var(--dur) var(--ease);
 }
 
 .bandLines {
   position: absolute;
-  left: 0;
-  top: 50%;
-  width: 117px;
-  height: 91px;
-  max-width: none;
-  transform: translateY(-50%);
+  inset: 0;
+  background: var(--l);
+  -webkit-mask: url('/blog/band-lines.png') left center / 208px 73px no-repeat;
+  mask: url('/blog/band-lines.png') left center / 208px 73px no-repeat;
+  transition: background-color var(--dur) var(--ease);
 }
 
-.text {
+/* hangs over the band's top-left corner, so only its inner edges show */
+.chip {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  padding: 4px 8px;
+  border: 1.2px solid var(--cb);
+  background: var(--b);
+  color: var(--ci);
+  font: var(--t-mono-s); /* Label/Mono S */
+  letter-spacing: var(--t-mono-s-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: 'case' 1, 'zero' 1, 'lnum' 1, 'tnum' 1;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+/* ---- title + text: side by side at 1440 (title at 225, text at 564) ---- */
+
+.body {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px 16px;
-  /* leave room for the meta block on the right */
-  padding-right: 340px;
-  font-family: var(--font-dm-sans), sans-serif;
-  line-height: 1.3;
-  font-variation-settings: 'opsz' 14;
-  font-feature-settings: 'case' 1;
+  align-items: center;
 }
 
 .title {
-  color: var(--blue);
-  font-size: 18px;
-}
-
-.excerpt {
-  max-width: 704px;
-  color: var(--navy);
-  font-size: 16px;
-}
-
-.read {
-  position: absolute;
-  right: 16px;
-  top: 21px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--navy);
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 1.2;
-  letter-spacing: 0.72px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
-}
-
-.read img {
-  width: 6.336px;
-  height: 5.952px;
-  transition: transform 320ms var(--ease);
-}
-
-@media (hover: hover) {
-  .row:hover .read img {
-    transform: translateX(3px);
-  }
-}
-
-.meta {
-  position: absolute;
-  right: 16px;
-  top: 58px;
-  display: flex;
-  align-items: center;
-}
-
-.chip {
-  display: block;
-  height: 20px;
-  padding: 4px 8px;
-  background: var(--navy);
-  color: var(--grey-light);
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 10px;
-  line-height: 1.2;
+  flex: 0 1 294px;
+  margin-left: 17px;
+  color: var(--ink);
+  /* no text style in Figma: Space Grotesk Bold 23.32 / 100%, -1% */
+  font: 700 23.32px/1 var(--sg);
   letter-spacing: -0.01em;
+  text-transform: uppercase;
+  font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+  transition: color var(--dur) var(--ease);
+}
+
+.text {
+  flex: 0 1 543px;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 45px;
+  padding: 11px 0 9px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  font: var(--t-mono-s); /* Label/Mono S, bold cut */
+  font-weight: 700;
+  letter-spacing: var(--t-mono-s-ls);
   text-transform: uppercase;
   white-space: nowrap;
   font-feature-settings: 'case' 1, 'zero' 1, 'lnum' 1, 'tnum' 1;
 }
 
-.chipBlue {
-  background: var(--blue);
+.team {
+  color: var(--navy);
+}
+
+/* mobile only: on desktop the date is the chip on the band */
+.date {
+  display: none;
+  color: #000;
+}
+
+.excerpt {
+  color: var(--navy);
+  /* no text style in Figma: DM Sans 14 / 130% */
+  font: 400 14px/1.3 var(--dm);
+  font-variation-settings: 'opsz' 14;
+  font-feature-settings: 'case' 1;
+}
+
+/* ---- read + colour bar: at 1153 ---- */
+
+.meta {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: auto;
+  padding: 12px 13px 0 46px;
+}
+
+.read {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  font: var(--t-label-m); /* Label/M */
+  letter-spacing: var(--t-label-m-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-feature-settings: 'case' 1, 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
+  transition: color var(--dur) var(--ease);
+}
+
+.readArrow {
+  width: 6.336px;
+  height: 5.952px;
+  transition: transform var(--dur) var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover .readArrow {
+    transform: translateX(3px);
+  }
 }
 
 .colorBar {
   display: flex;
   height: 20px;
+  margin-top: 10.6px;
 }
 
 .colorBar i {
   display: block;
   height: 100%;
+  transition: background-color var(--dur) var(--ease);
 }
 
 .colorBar i:nth-child(1) {
   width: 48px;
-  background: #fe5c3c;
+  background: var(--bar-1);
 }
 
 .colorBar i:nth-child(2) {
   width: 24px;
-  background: #ffbc2b;
+  background: var(--bar-2);
 }
 
 .colorBar i:nth-child(3) {
   width: 16px;
-  background: var(--navy);
+  background: var(--bar-3);
 }
 
-/* ---- narrower screens: meta drops under the text ---- */
+/* ---- tablet: the title sits above the text ---- */
 
-@media (max-width: 1100px) {
-  .text {
-    padding-right: 16px;
-    padding-bottom: 44px;
-  }
-
-  .read {
-    top: auto;
-    bottom: 16px;
-    right: auto;
-    left: calc(117px + 16px);
-  }
-
-  .meta {
-    top: auto;
-    bottom: 12px;
-    right: 16px;
-  }
-}
-
-@media (max-width: 767px) {
-  .heading {
-    font-size: 28px;
-  }
-
-  .band {
-    width: 56px;
-  }
-
-  .bandLines {
-    left: -30px;
-  }
-
-  .text {
-    padding: 12px 12px 72px;
+@media (max-width: 1023px) {
+  .body {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 11px 0 12px 17px;
   }
 
   .title {
-    font-size: 16px;
+    flex: none;
+    max-width: 420px;
+    margin-left: 0;
   }
 
+  .text {
+    flex: none;
+    max-width: 543px;
+    margin: 8px 0 0;
+    padding: 0;
+  }
+}
+
+/*
+ * ---- mobile — Figma 501:3156 ----
+ * 88-high rows: a 60px band on the left (its own crop of the drawing, no chip),
+ * team + date / title / read in the middle, the colour bar standing upright on
+ * the right. No hover on touch, so every row shows its colours.
+ */
+
+@media (max-width: 767px) {
+  .blog {
+    padding-inline: 16px;
+  }
+
+  .row,
+  .row[data-lit] {
+    --b: var(--band);
+    --l: var(--lines);
+    --ink: var(--blue);
+    --accent: var(--navy);
+    --bar-1: #fe5c3c;
+    --bar-2: #ffbc2b;
+    --bar-3: var(--navy);
+
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr) 20px;
+    /* the empty first and last tracks centre the middle column */
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: 8px;
+    align-items: stretch;
+    min-height: 88px;
+    padding: 0;
+    border: 0;
+    background: #fff;
+  }
+
+  .band {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    top: auto;
+    bottom: auto;
+    width: 60px;
+  }
+
+  .bandLines {
+    -webkit-mask: url('/blog/band-lines-mobile.png') center / 60px 88px no-repeat;
+    mask: url('/blog/band-lines-mobile.png') center / 60px 88px no-repeat;
+  }
+
+  .chip,
   .excerpt {
-    font-size: 14px;
+    display: none;
+  }
+
+  .body,
+  .text,
+  .meta {
+    display: contents;
+  }
+
+  .tags {
+    grid-column: 2;
+    grid-row: 2;
+    padding-right: 24px;
+  }
+
+  .team {
+    color: var(--blue);
+  }
+
+  .date {
+    display: block;
+  }
+
+  .title {
+    grid-column: 2;
+    grid-row: 3;
+    max-width: 239px;
+    margin-top: 6px;
+    font: var(--t-h3); /* Mobile/Heading/h3 */
+    letter-spacing: var(--t-h3-ls);
   }
 
   .read {
-    left: calc(56px + 12px);
-    bottom: 40px;
+    grid-column: 2;
+    grid-row: 4;
+    margin-top: 6px;
   }
 
-  .meta {
-    left: calc(56px + 12px);
-    right: auto;
-  }
-
+  /* upright: navy on top, orange at the bottom */
   .colorBar {
-    display: none;
+    grid-column: 3;
+    grid-row: 1 / -1;
+    flex-direction: column-reverse;
+    height: auto;
+    margin: 0;
+  }
+
+  .colorBar i {
+    width: 100%;
+    height: auto;
+  }
+
+  .colorBar i:nth-child(1) {
+    width: 100%;
+    flex: 48 0 0;
+  }
+
+  .colorBar i:nth-child(2) {
+    width: 100%;
+    flex: 24 0 0;
+  }
+
+  .colorBar i:nth-child(3) {
+    width: 100%;
+    flex: 16 0 0;
   }
 }

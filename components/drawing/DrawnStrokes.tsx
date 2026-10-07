@@ -10,6 +10,20 @@ export const DRAW_DUR = 650;
 
 export const drawTotal = (count: number, delay = DRAW_DELAY) => delay + (count - 1) * DRAW_STAGGER + DRAW_DUR;
 
+/** every drawn line on the site is this thick, whatever its source data says */
+export const STROKE_WIDTH = 1.6;
+
+/**
+ * Arrow caps are drawn for their stroke's original width; like Figma's caps they
+ * scale with the stroke, about the line end (the middle of their first edge).
+ */
+function scaleCap(points: string, k: number) {
+  const p = points.split(' ').map((xy) => xy.split(',').map(Number));
+  const cx = (p[0][0] + p[1][0]) / 2;
+  const cy = (p[0][1] + p[1][1]) / 2;
+  return p.map(([x, y]) => `${(cx + (x - cx) * k).toFixed(2)},${(cy + (y - cy) * k).toFixed(2)}`).join(' ');
+}
+
 /**
  * Stroke-by-stroke draw-on, in layer order. Each stroke is revealed by a solid
  * copy of its own path in a mask, so dashed strokes keep their dashes while
@@ -58,14 +72,14 @@ export default function DrawnStrokes({
             d={s.d}
             fill="none"
             stroke="#efefef"
-            strokeWidth={s.sw}
+            strokeWidth={STROKE_WIDTH}
             strokeDasharray={s.dash.length ? s.dash.join(' ') : undefined}
             strokeLinejoin={s.join === 'bevel' ? 'bevel' : 'miter'}
           />
           {caps
             .filter((c) => c.stroke === i)
             .map((c) => (
-              <polygon key={c.points} points={c.points} />
+              <polygon key={c.points} points={scaleCap(c.points, STROKE_WIDTH / s.sw)} />
             ))}
         </g>
       ))}

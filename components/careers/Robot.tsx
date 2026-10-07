@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import type * as THREE from 'three';
 import styles from './Careers.module.css';
+import { createRelief } from './reliefGrid';
+import { createGradientMapMaterial, createGradientMapUniforms } from './robotGradientMap';
 
 /*
  * Unitree G1 from the Blender file (public/models/g1.glb, see scripts/README).
@@ -15,9 +17,15 @@ const FPS = 24;
 // the smooth middle of each ping-pong action: extreme → neutral → other extreme
 const LEFT_RIGHT = { clip: 'Look_LeftRight', bone: 'waist_yaw_link', from: 45, mid: 75, to: 105 };
 const UP_DOWN = { clip: 'Look_UpDown', bone: 'torso_link', from: 36, mid: 60, to: 84 };
-const BASE = { clip: 'Base_ArmsDown', bones: ['left_elbow_link', 'right_elbow_link', 'left_shoulder_roll_link', 'right_shoulder_roll_link'] };
+const BASE = {
+  clip: 'Base_ArmsDown',
+  bones: ['left_elbow_link', 'right_elbow_link', 'left_shoulder_roll_link', 'right_shoulder_roll_link'],
+};
 // follow speed (1/s) — exponential smoothing so turning and tilting ease together
 const FOLLOW = 5;
+// touch screens (no cursor): how far the robot turns / tilts as it scrolls through the viewport
+const SCROLL_TURN = 0.35;
+const SCROLL_TILT = 0.4;
 
 const frameTime = (f: number) => f / FPS;
 
@@ -27,6 +35,8 @@ const FRAME = { heads: 1.8, topMargin: 0.08, rise: -0.1 };
 // the rig faces +X; turn it to the camera, then well round to its left — towards the
 // open-positions list on the left of the section
 const BASE_YAW = -Math.PI / 2 - 1.0;
+// grid bas-relief (reliefGrid.ts) instead of the gradient-mapped robot — off for now
+const RELIEF_GRID = false;
 
 export default function Robot({ active }: { active: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -74,12 +84,12 @@ export default function Robot({ active }: { active: boolean }) {
       const model = gltf.scene;
       scene.add(model);
 
-      // brand-neutral light grey, a touch of sheen
+      // matte grey, lit, then gradient-mapped like the team photo (robotGradientMap.ts)
+      const gmUniforms = createGradientMapUniforms(THREE_);
+      const material = createGradientMapMaterial(THREE_, gmUniforms);
       model.traverse((o) => {
         const m = o as THREE.Mesh;
-        if (m.isMesh) {
-          m.material = new THREE_.MeshStandardMaterial({ color: 0x9e9ea0, roughness: 0.85, metalness: 0 });
-        }
+        if (m.isMesh) m.material = material;
       });
 
       /* ---- NLA actions → mixer, each limited to the bones it really drives ---- */
@@ -103,8 +113,16 @@ export default function Robot({ active }: { active: boolean }) {
       const pose = (cx: number, y: number) => {
         // the waist action's first extreme turns the robot to screen-right, so mirror x
         const x = -cx;
-        if (yaw) yaw.time = frameTime(x < 0 ? LEFT_RIGHT.mid + x * (LEFT_RIGHT.mid - LEFT_RIGHT.from) : LEFT_RIGHT.mid + x * (LEFT_RIGHT.to - LEFT_RIGHT.mid));
-        if (pitch) pitch.time = frameTime(y < 0 ? UP_DOWN.mid + y * (UP_DOWN.mid - UP_DOWN.from) : UP_DOWN.mid + y * (UP_DOWN.to - UP_DOWN.mid));
+        if (yaw)
+          yaw.time = frameTime(
+            x < 0
+              ? LEFT_RIGHT.mid + x * (LEFT_RIGHT.mid - LEFT_RIGHT.from)
+              : LEFT_RIGHT.mid + x * (LEFT_RIGHT.to - LEFT_RIGHT.mid),
+          );
+        if (pitch)
+          pitch.time = frameTime(
+            y < 0 ? UP_DOWN.mid + y * (UP_DOWN.mid - UP_DOWN.from) : UP_DOWN.mid + y * (UP_DOWN.to - UP_DOWN.mid),
+          );
         mixer.update(0);
       };
       /* ---- frame like the reference: head + upper torso, cut flat across the chest ---- */
@@ -122,6 +140,10 @@ export default function Robot({ active }: { active: boolean }) {
       camera.position.set(center.x, lookY + viewH * FRAME.rise, center.z + dist);
       camera.lookAt(center.x, lookY, center.z);
 
+      // with the relief on, the robot is never drawn itself: it only drives the grid
+      const relief = RELIEF_GRID ? createRelief(THREE_, renderer, scene, camera, model) : null;
+      const draw = () => (relief ? relief.render() : renderer.render(scene, camera));
+
       /* ---- sizing: the canvas sits inside a CSS-scaled canvas, so size from the real rect ---- */
       const resize = () => {
         const r = renderer.domElement.getBoundingClientRect();
@@ -131,6 +153,8 @@ export default function Robot({ active }: { active: boolean }) {
         renderer.setSize(r.width, r.height, false);
         camera.aspect = r.width / r.height;
         camera.updateProjectionMatrix();
+        gmUniforms.uGmPixelRatio.value = dpr;
+        relief?.resize(r.width, r.height, dpr);
       };
       resize();
       const ro = new ResizeObserver(resize);
@@ -140,6 +164,8 @@ export default function Robot({ active }: { active: boolean }) {
       const target = { x: 0, y: 0 };
       const cur = { x: 0, y: 0 };
       const onMove = (e: PointerEvent) => {
+        // follows a mouse only: on touch, a finger scrolling past shouldn't steer it
+        if (e.pointerType !== 'mouse') return;
         const r = host.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height * 0.3; // roughly head height
@@ -147,6 +173,20 @@ export default function Robot({ active }: { active: boolean }) {
         target.y = Math.max(-1, Math.min(1, (e.clientY - cy) / (window.innerHeight / 2)));
       };
       window.addEventListener('pointermove', onMove, { passive: true });
+
+      // touch: no cursor to follow — the robot turns and tilts a little as the page scrolls it
+      // from the bottom of the screen (looking up) to the top (looking down)
+      const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const onScroll = () => {
+        const r = host.getBoundingClientRect();
+        const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - window.innerHeight / 2) / (window.innerHeight / 2)));
+        target.x = p * SCROLL_TURN;
+        target.y = -p * SCROLL_TILT;
+      };
+      if (!fine) {
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
 
       let last = performance.now();
       const tick = (now: number) => {
@@ -160,7 +200,7 @@ export default function Robot({ active }: { active: boolean }) {
         cur.x += (tx - cur.x) * a;
         cur.y += (ty - cur.y) * a;
         pose(cur.x, cur.y);
-        renderer.render(scene, camera);
+        draw();
         if (inView) raf = requestAnimationFrame(tick);
       };
       const start = () => {
@@ -174,15 +214,17 @@ export default function Robot({ active }: { active: boolean }) {
         if (inView) start();
       });
       io.observe(host);
-      renderer.render(scene, camera);
+      draw();
       host.dataset.ready = 'true';
 
       cleanup = () => {
         io.disconnect();
         ro.disconnect();
         window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('scroll', onScroll);
         cancelAnimationFrame(raf);
         mixer.stopAllAction();
+        relief?.dispose();
         model.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {

@@ -1,33 +1,101 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { EASE_CSS } from '@/lib/motion';
+import { EASE_CSS, ease } from '@/lib/motion';
 import styles from './Vision.module.css';
 import { IDLE_BUTTONS, STEPS } from './steps';
-import FigureArt from './FigureArt';
+import FigureArt, { artDuration } from './FigureArt';
 
 const DESIGN_W = 1440;
 const DESIGN_H = 762;
 const MOBILE_MAX = 767;
 const WIDE_MIN = 1920; // composition stops growing here and stays centred
-const FOLLOW_MAX = 16; // px, blue box travel each way
 const IDLE_MS = 2000;
 
-/*
- * Figure appear: the blue box stays at full size (it only fades in when the
- * section is reached); the grey panel — and the lines that run past the box —
- * open outward from the box edges while the strokes draw on.
+/* the blue box inside the 657×684 panel: top, right, bottom, left */
+const BOX = [68, 60, 48, 64];
+const BOX_CLIP = `inset(${BOX.map((v) => `${v}px`).join(' ')})`;
+/**
+ * A graphic's line clip: 0 = the blue box, 1 = the whole panel plus `up` / `down`
+ * design px beyond its top / bottom edge (where the grey column carries on).
  */
-const BOX_CLIP = 'inset(68px 60px 48px 64px)'; // the blue box inside the 657×684 panel
-const POP_FADE: KeyframeAnimationOptions = { duration: 260, easing: EASE_CSS, fill: 'backwards' };
-const POP_OPEN: KeyframeAnimationOptions = { duration: 560, delay: 120, easing: EASE_CSS, fill: 'backwards' };
+const openClip = (open: number, up: number, down: number) => {
+  const [t, r, b, l] = BOX.map((v) => v * (1 - open));
+  const px = (v: number) => `${v.toFixed(2)}px`;
+  return `inset(${px(t - open * up)} ${px(r)} ${px(b - open * down)} ${px(l)})`;
+};
+/* the panel's top/bottom edge sits this far from the centre of the 762-high frame */
+const PANEL_HALF = 342;
 
 /*
- * Leaving a step plays it backwards: panel + overhanging lines close onto the
- * box, then the drawing fades off the (unchanged) blue box.
+ * Desktop: the three graphics scroll past in the page; each one's distance from
+ * the viewport centre, in slots (the distance between two graphics' centres),
+ * sets its drawing. Coming in it draws on between DRAW_FROM and DRAW_TO; then the lines
+ * beyond the blue box run out to their ends between EXT_FROM and EXT_TO; inside
+ * EXT_TO it holds complete. Going out plays the same backwards.
  */
+const DRAW_FROM = 0.7;
+const DRAW_TO = 0.17;
+const EXT_FROM = 0.17;
+const EXT_TO = 0.05;
+
+
+/* desktop: the grey column opens out from under a blue box once, on reaching the section */
+const PANEL_OPEN: KeyframeAnimationOptions = { duration: 560, delay: 120, easing: EASE_CSS, fill: 'backwards' };
+const PANEL_CLOSE: KeyframeAnimationOptions = { duration: 560, easing: EASE_CSS };
+
+/*
+ * Mobile: one figure that pops per step (the 01/02/03 buttons switch it). The blue box fades in when the
+ * section is reached; the panel and overhanging lines open outward while the
+ * strokes draw on, and leaving a step plays it backwards.
+ */
+const POP_FADE: KeyframeAnimationOptions = { duration: 260, easing: EASE_CSS, fill: 'backwards' };
+const POP_OPEN: KeyframeAnimationOptions = { duration: 560, delay: 120, easing: EASE_CSS, fill: 'backwards' };
 const UNPOP_CLOSE: KeyframeAnimationOptions = { duration: 560, easing: EASE_CSS, fill: 'forwards' };
 const UNPOP_FADE: KeyframeAnimationOptions = { duration: 260, delay: 440, easing: EASE_CSS, fill: 'forwards' };
+
+/*
+ * Mobile figure: the blue graphic (box + drawing) at 90%, and the grey above and
+ * below it half as deep — a shorter panel, still the full screen width. The
+ * graphic is scaled about the box centre and moved up so the box sits M_GREY_T
+ * below the panel top; the line clip opens to the panel's edges in the scaled
+ * drawing's own coordinates, and the lines run on to them (FigureArt `extend`).
+ */
+const M_SCALE = 0.9;
+const M_GREY_T = BOX[0] / 2;
+const M_GREY_B = BOX[2] / 2;
+const M = (() => {
+  const [t, r, b, l] = BOX;
+  const cx = l + (657 - l - r) / 2;
+  const cy = t + (684 - t - b) / 2;
+  const boxW = (657 - l - r) * M_SCALE;
+  const boxH = (684 - t - b) * M_SCALE;
+  const panelH = M_GREY_T + boxH + M_GREY_B;
+  const dy = M_GREY_T - (cy - boxH / 2);
+  const boxL = cx - boxW / 2;
+  // a point of the panel (figure px) in the scaled drawing's own px
+  const local = (v: number, c: number, shift = 0) => (v - shift - c) / M_SCALE + c;
+  const px = (v: number) => `${v.toFixed(2)}px`;
+  // the panel closed onto the (smaller) box, in panel px
+  const panelClosed = `inset(${px(M_GREY_T)} ${px(657 - boxL - boxW)} ${px(M_GREY_B)} ${px(boxL)})`;
+  // the lines open to the panel's edges, in the scaled drawing's px
+  const linesOpen = `inset(${px(local(0, cy, dy))} ${px(657 - local(657, cx))} ${px(684 - local(panelH, cy, dy))} ${px(local(0, cx))})`;
+  return {
+    panelClosed,
+    linesOpen,
+    style: {
+      '--m-panel-h': px(panelH),
+      '--m-dy': px(dy),
+      '--m-scale': M_SCALE,
+      '--m-origin': `${px(cx)} ${px(cy)}`,
+      '--m-panel-closed': panelClosed,
+      '--m-lines-open': linesOpen,
+    } as CSSProperties,
+  };
+})();
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Corner bracket of the 01/02/03 buttons (bottom-left orientation; others are mirrored in CSS). */
 const Corner = ({ className }: { className: string }) => (
@@ -38,159 +106,407 @@ const Corner = ({ className }: { className: string }) => (
 
 export default function Vision() {
   const rootRef = useRef<HTMLElement>(null);
+  // the stage holding the left column (desktop: the front sticky layer)
   const stageRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const clipRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [layout, setLayout] = useState<'desktop' | 'mobile'>('desktop');
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
+
+  /* ---- fit the 1440×762 composition into the viewport-high stage ---- */
+
+  useLayoutEffect(() => {
+    const root = rootRef.current!;
+    const fit = () => {
+      const w = root.clientWidth;
+      const h = stageRef.current?.clientHeight || window.innerHeight;
+      setLayout(w <= MOBILE_MAX ? 'mobile' : 'desktop');
+      root.style.setProperty('--k', `${Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H)}`);
+      // mobile: the figure panel spans the full screen width
+      root.style.setProperty('--fig-s', `${w / 657}`);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(root);
+    window.addEventListener('resize', fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', fit);
+    };
+  }, []);
+
+  const select = (i: number) => {
+    if (i === activeRef.current) return;
+    activeRef.current = i;
+    setActive(i);
+  };
+
+  /* ---- desktop: scroll position drives the active step and every graphic's drawing ---- */
+
+  useEffect(() => {
+    if (layout !== 'desktop') return;
+    const items = itemRefs.current.filter(Boolean) as HTMLDivElement[];
+    const clips = clipRefs.current.filter(Boolean) as HTMLDivElement[];
+    const durations = STEPS.map(artDuration);
+    // the drawing's own CSS animations, paused and scrubbed; fetched on first use
+    const anims: (Animation[] | null)[] = items.map(() => null);
+    const written = items.map(() => ({ draw: -1, open: -1 }));
+    let centers: number[] = [];
+    let slot = 1;
+    // design px from a centred graphic's panel edge to the screen edge
+    let reach = 0;
+    let raf = 0;
+
+    // positions are read on resize only; scrolling just reads scrollY
+    const measure = () => {
+      const sy = window.scrollY;
+      centers = items.map((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top + sy + r.height / 2;
+      });
+      slot = centers.length > 1 ? centers[1] - centers[0] : window.innerHeight;
+      const k = items[0].getBoundingClientRect().width / DESIGN_W;
+      reach = Math.max(0, window.innerHeight / 2 / k - PANEL_HALF) + 2;
+      written.forEach((w) => (w.open = -1));
+    };
+
+    const update = () => {
+      raf = 0;
+      const mid = window.scrollY + window.innerHeight / 2;
+      let nearest = 0;
+      centers.forEach((c, i) => {
+        const u = Math.abs(c - mid) / slot;
+        if (u < Math.abs(centers[nearest] - mid) / slot) nearest = i;
+        const draw = clamp01((DRAW_FROM - u) / (DRAW_FROM - DRAW_TO));
+        const open = ease(clamp01((EXT_FROM - u) / (EXT_FROM - EXT_TO)));
+        const w = written[i];
+        if (draw !== w.draw) {
+          anims[i] ??= clips[i].getAnimations({ subtree: true });
+          for (const a of anims[i]!) {
+            a.pause();
+            a.currentTime = draw * durations[i];
+          }
+          w.draw = draw;
+        }
+        if (open !== w.open) {
+          // the lines run on to the screen edge wherever the grey column goes on:
+          // not above the first graphic, not below the last
+          clips[i].style.clipPath = openClip(open, i > 0 ? reach : 0, i < items.length - 1 ? reach : 0);
+          w.open = open;
+        }
+      });
+      select(nearest);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
+
+    measure();
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // auto snap: the browser's own scroll snapping onto the graphics (scroll-snap-align
+    // in the CSS), so the scroll lands on one as it ends instead of gliding after it
+    const html = document.documentElement;
+    html.style.scrollSnapType = 'y proximity';
+    // anything above the section changing height moves the graphics' page positions
+    const ro = new ResizeObserver(onResize);
+    ro.observe(document.body);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      html.style.scrollSnapType = '';
+    };
+  }, [layout]);
+
+  /*
+   * ---- desktop: the grey column opens once when the section is reached ----
+   * It waits closed onto the blue box of the graphic you arrive at — the first
+   * coming down the page, the last coming back up — and closes onto the one you
+   * leave from.
+   */
+
+  useEffect(() => {
+    if (layout !== 'desktop') return;
+    const column = columnRef.current!;
+    let anim: Animation | null = null;
+    let open = false;
+    const closed = (end: 'first' | 'last') => {
+      const k = column.offsetWidth / 657;
+      const h = column.offsetHeight;
+      const [t, r, b, l] = BOX.map((v) => v * k);
+      const px = (v: number) => `${v.toFixed(2)}px`;
+      return end === 'first'
+        ? `inset(${px(t)} ${px(r)} ${px(h - (684 * k - b))} ${px(l)})`
+        : `inset(${px(h - (684 * k - t))} ${px(r)} ${px(b)} ${px(l)})`;
+    };
+    column.style.clipPath = closed('first');
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting === open) return;
+        open = entry.isIntersecting;
+        // the sticky stage is below the viewport top when the section is ahead of us
+        const shut = closed(entry.boundingClientRect.top > 0 ? 'first' : 'last');
+        anim?.cancel();
+        column.style.clipPath = open ? 'inset(0px)' : shut;
+        if (reducedMotion()) return;
+        anim = open
+          ? column.animate([{ clipPath: shut }, { clipPath: 'inset(0px)' }], PANEL_OPEN)
+          : column.animate([{ clipPath: 'inset(0px)' }, { clipPath: shut }], PANEL_CLOSE);
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(stageRef.current!);
+    return () => {
+      io.disconnect();
+      anim?.cancel();
+      column.style.clipPath = '';
+    };
+  }, [layout]);
+
+  /*
+   * ---- 01 / 02 / 03 ----
+   * Desktop: clicking only moves the page; the scroll position does the rest.
+   * Mobile: the buttons alone switch the step — scrolling doesn't.
+   */
+
+  const goTo = (i: number) => {
+    if (layout === 'mobile') {
+      select(i);
+      return;
+    }
+    const r = itemRefs.current[i]!.getBoundingClientRect();
+    window.scrollTo({
+      top: Math.round(window.scrollY + r.top + r.height / 2 - window.innerHeight / 2),
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    });
+  };
+
+  /* ---- scroll indicator: after 2s without scrolling inside the section, nudge every 2s ---- */
+
+  useEffect(() => {
+    const root = rootRef.current!;
+    let inView = false;
+    let timer = 0;
+    const arm = () => {
+      clearTimeout(timer);
+      delete root.dataset.idle;
+      if (inView) timer = window.setTimeout(() => (root.dataset.idle = 'true'), IDLE_MS);
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      arm();
+    });
+    io.observe(stageRef.current!);
+    window.addEventListener('scroll', arm, { passive: true });
+    return () => {
+      io.disconnect();
+      clearTimeout(timer);
+      window.removeEventListener('scroll', arm);
+    };
+  }, [layout]);
+
+  const step = STEPS[active];
+
+  const heading = <h2 className={styles.heading}>Be the first to deploy humanoid robots in factories at scale.</h2>;
+
+  const leftColumn = (
+    <>
+      {/* left: scroll strip + step tab */}
+      <div className={styles.scrollStrip} aria-hidden>
+        <div className={styles.scrollBar}>
+          <span className={styles.scrollText}>
+            <span className={styles.scrollArrow}>←</span> [ Scroll ]
+          </span>
+        </div>
+        <div className={styles.scrollBarcode}>
+          <img src="/vision/scroll-barcode.svg" alt="" width={521} height={34} />
+        </div>
+      </div>
+
+      <div className={styles.tab} aria-hidden>
+        <span className={styles.tabIcon} />
+        <span className={styles.tabLabel} key={step.id}>
+          {step.id}
+        </span>
+      </div>
+
+      <div className={styles.card}>
+        <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={654} height={260} />
+        <div className={styles.copy} key={step.id} aria-live="polite">
+          <p className={styles.label}>[ {step.label} ]</p>
+          <h3 className={styles.title}>{step.title}</h3>
+          <p className={styles.body}>{step.body}</p>
+        </div>
+      </div>
+
+      <div className={styles.buttons} role="tablist" aria-label="Steps">
+        {STEPS.map((s, i) => {
+          const idle = IDLE_BUTTONS[active][i];
+          const style = {
+            '--bg': idle ? idle.bg : s.color,
+            '--ink': idle ? idle.ink : s.ink,
+            '--hover-bg': s.color,
+            '--hover-ink': s.ink,
+          } as CSSProperties;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-label={`${s.number} — ${s.label}`}
+              className={styles.button}
+              style={style}
+              onClick={() => goTo(i)}
+            >
+              <Corner className={styles.cTL} />
+              <Corner className={styles.cTR} />
+              <span className={styles.number}>{s.number}</span>
+              {/* mobile: the active button widens and carries the step's label */}
+              <span className={styles.buttonLabel} aria-hidden>
+                [ {s.label} ]
+              </span>
+              <Corner className={styles.cBL} />
+              <Corner className={styles.cBR} />
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  return (
+    <section
+      ref={rootRef}
+      className={styles.vision}
+      data-layout={layout}
+      aria-label="Our approach"
+      style={{ '--step-color': step.color, '--step-ink': step.ink } as CSSProperties}
+    >
+      {layout === 'desktop' ? (
+        <>
+          {/* the sticky left column */}
+          <div ref={stageRef} className={`${styles.stage} ${styles.stageFront}`}>
+            <div className={styles.frame}>
+              <div className={styles.canvas}>
+                {heading}
+                {leftColumn}
+              </div>
+            </div>
+          </div>
+
+          {/* under it: the three graphics in the page flow, one below the other, on one grey column */}
+          <div className={styles.track} aria-hidden>
+            <div className={styles.column} ref={columnRef} />
+            {STEPS.map((s, i) => (
+              <div
+                key={s.id}
+                className={styles.frame}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+              >
+                <div className={styles.canvas}>
+                  <div className={`${styles.figure} ${styles.scrub}`}>
+                    <div className={styles.box} />
+                    <div
+                      className={styles.linesClip}
+                      ref={(el) => {
+                        clipRefs.current[i] = el;
+                      }}
+                    >
+                      <FigureArt step={s} extend />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div ref={stageRef} className={styles.stage}>
+          <div className={styles.frame}>
+            <div className={styles.canvas}>
+              {heading}
+              <PoppingFigure active={active} />
+              {leftColumn}
+            </div>
+          </div>
+          <div hidden>
+            {STEPS.map((s) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={s.id} src={s.figure.labels} alt="" />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Mobile figure (the original behaviour): one slot that pops in when the section
+ * is reached, and plays out / pops in again every time the step changes.
+ */
+function PoppingFigure({ active }: { active: number }) {
+  const figRef = useRef<HTMLDivElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const linesRef = useRef<HTMLDivElement>(null);
   const popAnims = useRef<Animation[]>([]);
   const inViewRef = useRef(false);
-  const [active, setActive] = useState(0);
-  const activeRef = useRef(0);
+  const activeRef = useRef(active);
+  activeRef.current = active;
   // the step the figure is showing; trails `active` while the outgoing figure plays out
-  const [shown, setShown] = useState(0);
-  const shownRef = useRef(0);
+  const [shown, setShown] = useState(active);
+  const shownRef = useRef(active);
   const exiting = useRef(false);
   // bumped on every pop so the line drawing re-draws from scratch
   const [drawKey, setDrawKey] = useState(0);
-  // while a click's smooth scroll travels, the scroll position still reads the old step
-  const scrollLock = useRef<{ top: number; until: number } | null>(null);
-
-  /* ---- fit the 1440×762 composition into the sticky stage ---- */
-
-  useLayoutEffect(() => {
-    const root = rootRef.current!;
-    const stage = stageRef.current!;
-    const fit = () => {
-      const w = stage.clientWidth;
-      const h = stage.clientHeight;
-      root.dataset.layout = w <= MOBILE_MAX ? 'mobile' : 'desktop';
-      root.style.setProperty('--k', `${Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H)}`);
-      // mobile: the figure panel scales to whatever room the stacked layout leaves it
-      root.style.setProperty('--fig-s', `${Math.min((w - 32) / 657, (h * 0.36) / 684)}`);
-    };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(stage);
-    return () => ro.disconnect();
-  }, []);
-
-  /* ---- scroll drives the step; the section is a tall track with a sticky stage ---- */
-
-  const progressRange = useCallback(() => {
-    const root = rootRef.current!;
-    const top = root.getBoundingClientRect().top + window.scrollY;
-    return { top, span: root.offsetHeight - window.innerHeight };
-  }, []);
-
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const lock = scrollLock.current;
-      if (lock) {
-        if (Math.abs(window.scrollY - lock.top) > 2 && performance.now() < lock.until) return;
-        scrollLock.current = null;
-      }
-      const { top, span } = progressRange();
-      const p = Math.min(1, Math.max(0, (window.scrollY - top) / span));
-      const next = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length));
-      if (next !== activeRef.current) {
-        activeRef.current = next;
-        setActive(next);
-      }
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    // the user taking over the scroll ends a click's lock straight away
-    const release = () => {
-      scrollLock.current = null;
-    };
-    update();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    window.addEventListener('wheel', release, { passive: true });
-    window.addEventListener('touchstart', release, { passive: true });
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      window.removeEventListener('wheel', release);
-      window.removeEventListener('touchstart', release);
-    };
-  }, [progressRange]);
-
-  // clicking a number scrolls to the middle of that step's band, so scroll and click stay in sync
-  const goTo = (i: number) => {
-    const { top, span } = progressRange();
-    activeRef.current = i;
-    setActive(i);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const target = Math.round(top + ((i + 0.5) / STEPS.length) * span);
-    scrollLock.current = { top: target, until: performance.now() + 2000 };
-    window.scrollTo({ top: target, behavior: reduced ? 'auto' : 'smooth' });
-  };
-
-  /* ---- blue box follows the cursor vertically, inverted, ±16px ---- */
-
-  useEffect(() => {
-    const root = rootRef.current!;
-    let raf = 0;
-    let y = 0;
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
-      y = e.clientY;
-      if (!raf)
-        raf = requestAnimationFrame(() => {
-          raf = 0;
-          const ratio = Math.min(1, Math.max(-1, (y / window.innerHeight - 0.5) * 2));
-          root.style.setProperty('--follow', `${-ratio * FOLLOW_MAX}px`);
-        });
-    };
-    root.addEventListener('pointermove', onMove);
-    return () => {
-      cancelAnimationFrame(raf);
-      root.removeEventListener('pointermove', onMove);
-    };
-  }, []);
-
-  /* ---- figure pop: on entering the section, and every time a step becomes active ---- */
 
   const pop = useCallback(() => {
-    const root = rootRef.current!;
-    const entering = root.dataset.figure === 'waiting';
+    const fig = figRef.current!;
+    const entering = fig.dataset.figure === 'waiting';
     popAnims.current.forEach((a) => a.cancel());
-    delete root.dataset.figure;
+    delete fig.dataset.figure;
     setDrawKey((k) => k + 1);
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const open = [{ clipPath: BOX_CLIP }, { clipPath: 'inset(0px)' }];
-    popAnims.current = [panelRef.current!.animate(open, POP_OPEN), linesRef.current!.animate(open, POP_OPEN)];
+    if (reducedMotion()) return;
+    popAnims.current = [
+      panelRef.current!.animate([{ clipPath: M.panelClosed }, { clipPath: 'inset(0px)' }], POP_OPEN),
+      linesRef.current!.animate([{ clipPath: BOX_CLIP }, { clipPath: M.linesOpen }], POP_OPEN),
+    ];
     // only when the section is reached; between steps the box simply stays
     if (entering) popAnims.current.push(popRef.current!.animate([{ opacity: 0 }, { opacity: 1 }], POP_FADE));
   }, []);
 
   useEffect(() => {
-    const root = rootRef.current!;
+    const fig = figRef.current!;
     const io = new IntersectionObserver(
       ([entry]) => {
         const was = inViewRef.current;
         inViewRef.current = entry.isIntersecting;
         if (entry.isIntersecting && !was) pop();
         // out of view: park the figure collapsed so it pops again on return
-        if (!entry.isIntersecting) root.dataset.figure = 'waiting';
+        if (!entry.isIntersecting) fig.dataset.figure = 'waiting';
       },
       { threshold: 0.35 },
     );
-    io.observe(stageRef.current!);
+    io.observe(fig);
     return () => io.disconnect();
   }, [pop]);
 
   const unpop = useCallback(() => {
     popAnims.current.forEach((a) => a.cancel());
-    const close = [{ clipPath: 'inset(0px)' }, { clipPath: BOX_CLIP }];
     popAnims.current = [
-      panelRef.current!.animate(close, UNPOP_CLOSE),
-      linesRef.current!.animate(close, UNPOP_CLOSE),
+      panelRef.current!.animate([{ clipPath: 'inset(0px)' }, { clipPath: M.panelClosed }], UNPOP_CLOSE),
+      linesRef.current!.animate([{ clipPath: M.linesOpen }, { clipPath: BOX_CLIP }], UNPOP_CLOSE),
       linesRef.current!.animate([{ opacity: 1 }, { opacity: 0 }], UNPOP_FADE),
     ];
     return Promise.all(popAnims.current.map((a) => a.finished));
@@ -199,8 +515,7 @@ export default function Vision() {
   // step change: play the outgoing figure out, then swap and pop the new one in
   useEffect(() => {
     if (active === shownRef.current || exiting.current) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!inViewRef.current || reduced) {
+    if (!inViewRef.current || reducedMotion()) {
       shownRef.current = active;
       setShown(active);
       return;
@@ -237,122 +552,18 @@ export default function Vision() {
     if (inViewRef.current) pop();
   }, [shown, pop]);
 
-  /* ---- scroll indicator: after 2s without scrolling inside the section, nudge every 2s ---- */
-
-  useEffect(() => {
-    const root = rootRef.current!;
-    let inView = false;
-    let timer = 0;
-    const arm = () => {
-      clearTimeout(timer);
-      delete root.dataset.idle;
-      if (inView) timer = window.setTimeout(() => (root.dataset.idle = 'true'), IDLE_MS);
-    };
-    const io = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      arm();
-    });
-    io.observe(stageRef.current!);
-    window.addEventListener('scroll', arm, { passive: true });
-    return () => {
-      io.disconnect();
-      clearTimeout(timer);
-      window.removeEventListener('scroll', arm);
-    };
-  }, []);
-
-  const step = STEPS[active];
-
   return (
-    <section
-      ref={rootRef}
-      className={styles.vision}
-      aria-label="Our approach"
-      style={{ '--step-color': step.color, '--step-ink': step.ink, '--steps': STEPS.length } as CSSProperties}
-    >
-      <div ref={stageRef} className={styles.stage}>
-        <div className={styles.frame}>
-          <div className={styles.canvas}>
-            <h2 className={styles.heading}>Be the first to deploy humanoid robots in factories at scale.</h2>
-
-            {/* right: figure panel — the blue box moves, the line drawing stays */}
-            <div className={styles.figure} aria-hidden>
-              <div className={styles.pop} ref={popRef}>
-                {/* inside the scaling wrapper, so while clipped to the box it stays hidden under it */}
-                <div className={styles.panel} ref={panelRef} />
-                <div className={styles.box} />
-                <div className={styles.linesClip} ref={linesRef}>
-                  <FigureArt key={`${shown}-${drawKey}`} step={STEPS[shown]} />
-                </div>
-              </div>
-            </div>
-
-            {/* left: scroll strip + step tab */}
-            <div className={styles.scrollStrip} aria-hidden>
-              <div className={styles.scrollBar}>
-                <span className={styles.scrollText}>
-                  <span className={styles.scrollArrow}>←</span> [ Scroll ]
-                </span>
-              </div>
-              <div className={styles.scrollBarcode}>
-                <img src="/vision/scroll-barcode.svg" alt="" width={521} height={34} />
-              </div>
-            </div>
-
-            <div className={styles.tab} aria-hidden>
-              <span className={styles.tabIcon} />
-              <span className={styles.tabLabel} key={step.id}>
-                {step.id}
-              </span>
-            </div>
-
-            <div className={styles.card}>
-              <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={654} height={260} />
-              <div className={styles.copy} key={step.id} aria-live="polite">
-                <p className={styles.label}>[ {step.label} ]</p>
-                <h3 className={styles.title}>{step.title}</h3>
-                <p className={styles.body}>{step.body}</p>
-              </div>
-            </div>
-
-            <div className={styles.buttons} role="tablist" aria-label="Steps">
-              {STEPS.map((s, i) => {
-                const idle = IDLE_BUTTONS[active][i];
-                const style = {
-                  '--bg': idle ? idle.bg : s.color,
-                  '--ink': idle ? idle.ink : s.ink,
-                  '--hover-bg': s.color,
-                  '--hover-ink': s.ink,
-                } as CSSProperties;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={i === active}
-                    aria-label={`${s.number} — ${s.label}`}
-                    className={styles.button}
-                    style={style}
-                    onClick={() => goTo(i)}
-                  >
-                    <Corner className={styles.cTL} />
-                    <Corner className={styles.cTR} />
-                    <span className={styles.number}>{s.number}</span>
-                    <Corner className={styles.cBL} />
-                    <Corner className={styles.cBR} />
-                  </button>
-                );
-              })}
-            </div>
+    <div className={styles.figure} ref={figRef} style={M.style} aria-hidden>
+      <div className={styles.pop} ref={popRef}>
+        {/* inside the scaling wrapper, so while clipped to the box it stays hidden under it */}
+        <div className={styles.panel} ref={panelRef} />
+        <div className={styles.scaled}>
+          <div className={styles.box} />
+          <div className={styles.linesClip} ref={linesRef}>
+            <FigureArt key={`${shown}-${drawKey}`} step={STEPS[shown]} extend />
           </div>
         </div>
       </div>
-      <div hidden>
-        {STEPS.map((s) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={s.id} src={s.figure.src} alt="" />
-        ))}
-      </div>
-    </section>
+    </div>
   );
 }
