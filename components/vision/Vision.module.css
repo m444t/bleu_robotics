@@ -128,7 +128,7 @@
 /* ------------------------------------------------------------------ */
 
 .heading {
-  left: 165px;
+  left: calc(165px + var(--left-shift, -19px));
   top: 152px;
   width: 409px;
   margin: 0;
@@ -243,7 +243,7 @@
 /* ---- scroll strip ---- */
 
 .scrollStrip {
-  left: 65px;
+  left: calc(65px + var(--left-shift, -19px));
   top: 156px;
   width: 64px;
   height: 521px;
@@ -316,7 +316,7 @@
 /* ---- step tab ---- */
 
 .tab {
-  left: 65px;
+  left: calc(65px + var(--left-shift, -19px));
   top: 106px;
   width: 64px;
   height: 161px;
@@ -355,10 +355,11 @@
 /* ---- text card ---- */
 
 .card {
-  left: 129px;
-  top: 417px;
+  left: calc(129px + var(--left-shift, -19px));
+  /* taller than Figma's 260 (top 417) for the longer step copy; same bottom, 677 */
+  top: 342px;
   width: 654px;
-  height: 260px;
+  height: 335px;
   overflow: hidden;
   background: #fff;
 }
@@ -416,8 +417,8 @@
 /* ---- 01 / 02 / 03 ---- */
 
 .buttons {
-  left: 655px;
-  top: 417px;
+  left: calc(655px + var(--left-shift, -19px));
+  top: 342px; /* on the card's top edge */
   display: flex;
 }
 

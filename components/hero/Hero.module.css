@@ -550,7 +550,8 @@
 
 .panelInner {
   display: grid;
-  grid-template-columns: calc(100% * 93 / 1440) calc(100% * 653 / 1440) calc(100% * 17 / 1440) calc(100% * 585 / 1440) 1fr;
+  /* the headline starts on the photos' edge (46; Figma has 93), the subline stays put */
+  grid-template-columns: calc(100% * 46 / 1440) calc(100% * 653 / 1440) calc(100% * 64 / 1440) calc(100% * 585 / 1440) 1fr;
   align-items: start;
   max-width: 1920px;
   margin: 0 auto;

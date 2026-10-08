@@ -22,7 +22,7 @@ import type * as THREE from 'three';
 
 export const RELIEF = {
   /** grid cell size, px (cells are square) */
-  gridCellSize: 14,
+  gridCellSize: 7,
   /** line thickness, px on screen */
   gridLineWidth: 1,
   /** line colour */
@@ -47,8 +47,9 @@ export const RELIEF = {
   /** robot size inside the grid field */
   robotScale: 1,
   /** robot position inside the grid field, px (+x right, +y down) */
-  robotOffsetX: 0,
-  robotOffsetY: 0,
+  // 16 px left, 24 px down on the 540-high careers canvas (values are at the 590 reference)
+  robotOffsetX: -17.5,
+  robotOffsetY: 26.2,
 };
 
 /** canvas height the px values above are designed for */

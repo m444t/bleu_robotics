@@ -16,17 +16,27 @@ type Post = {
   tone: Tone;
 };
 
-// Figma shows one article; swap in real posts here.
-const POST = {
-  title: 'The scientific heritage of Bleu Robotics',
-  excerpt:
-    'Backed by two decades of academic research conducted before “AI” was called “AI”, we helped shape the path of what is now called artificial intelligence.',
-  team: 'Research team',
-  updated: '2026/03/17',
-  read: '5 min read',
-  href: '#blog',
-};
-const POSTS: Post[] = (['blue', 'navy', 'orange', 'yellow'] as const).map((tone) => ({ ...POST, tone }));
+const POSTS: Post[] = [
+  {
+    title: 'Introducing Bleu_0.1.',
+    excerpt: 'Our first few-shot imitation policy: any task, any robot, deployed in few demonstrations',
+    team: 'Research team',
+    updated: '2026/03/17',
+    read: '5 min read',
+    href: '#blog',
+    tone: 'blue',
+  },
+  {
+    title: 'The scientific heritage of Bleu Robotics',
+    excerpt:
+      'Backed by two decades of academic research conducted before “AI” was called AI: we helped shape the very path of what is now called artificial intelligence. Here are our contributions.',
+    team: 'Research team',
+    updated: '2026/02/24',
+    read: '5 min read',
+    href: '#blog',
+    tone: 'navy',
+  },
+];
 
 /** band, line, date-chip border and chip text colours per tone (Figma 450:12008) */
 const TONES: Record<Tone, CSSProperties> = {

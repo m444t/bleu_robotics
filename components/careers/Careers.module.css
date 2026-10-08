@@ -104,6 +104,8 @@
   letter-spacing: var(--t-label-l-ls);
   text-transform: uppercase;
   white-space: nowrap;
+  /* where a role title does wrap (mobile), keep the lines even (style only: nowrap stays) */
+  text-wrap-style: balance;
   font-feature-settings: 'case' 1, 'ss05' 1, 'zero' 1, 'lnum' 1, 'tnum' 1;
 }
 

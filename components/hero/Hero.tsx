@@ -357,10 +357,11 @@ export default function Hero() {
 
       <div className={styles.panel}>
         <div className={styles.panelInner} ref={panelRef}>
-          <h1 className={styles.headline}>Industrial AI that learns from demonstration.</h1>
+          <h1 className={styles.headline}>Teaching humanoid robots to work in factories</h1>
           <p className={styles.subline}>
-            Bleu Robotics builds the AI that lets one humanoid robot take on the next task on your line. An operator teaches it
-            by demonstration, and the same robot is retaught whenever the work changes.
+            Drawing on two decades of robot learning research, Bleu Robotics builds the AI that lets a humanoid robot take on
+            manual tasks on your line. Teach the robot a task in under an hour with a few demonstrations, and a new task at
+            each changeover.
           </p>
         </div>
       </div>

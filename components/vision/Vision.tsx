@@ -8,6 +8,8 @@ import FigureArt, { artDuration } from './FigureArt';
 
 const DESIGN_W = 1440;
 const DESIGN_H = 762;
+// the tab / scroll strip's x in the Figma frame; the whole left column moves with it (--left-shift)
+const TAB_LEFT = 65;
 const MOBILE_MAX = 767;
 const WIDE_MIN = 1920; // composition stops growing here and stays centred
 const IDLE_MS = 2000;
@@ -125,7 +127,15 @@ export default function Vision() {
       const w = root.clientWidth;
       const h = stageRef.current?.clientHeight || window.innerHeight;
       setLayout(w <= MOBILE_MAX ? 'mobile' : 'desktop');
-      root.style.setProperty('--k', `${Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H)}`);
+      const k = Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H);
+      root.style.setProperty('--k', `${k}`);
+      // the left column starts on the page's photo edge (46 in the 1440 column, as the team
+      // photo and the hero's treated band), wherever this frame sits: a short screen
+      // shrinks it by height, so it's narrower than the page column and centred
+      const col = Math.min(w, WIDE_MIN);
+      const edge = (w - col) / 2 + (46 * col) / DESIGN_W;
+      const frameLeft = (w - DESIGN_W * k) / 2;
+      root.style.setProperty('--left-shift', `${(edge - frameLeft) / k - TAB_LEFT}px`);
       // mobile: the figure panel spans the full screen width
       root.style.setProperty('--fig-s', `${w / 657}`);
     };
@@ -331,7 +341,7 @@ export default function Vision() {
 
   const step = STEPS[active];
 
-  const heading = <h2 className={styles.heading}>Be the first to deploy humanoid robots in factories at scale.</h2>;
+  const heading = <h2 className={styles.heading}>Deploying humanoid robots at scale, starting where they matter most.</h2>;
 
   const leftColumn = (
     <>

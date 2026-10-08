@@ -30,13 +30,7 @@
     --wt 900ms var(--ease) 100ms;
 }
 
-/* Jean-Baptiste: the window closes in on his head */
-.team[data-focus='jean'] {
-  --wl: 131px;
-  --wt: 103px;
-  --wr: 292px;
-  --wb: 296px;
-}
+/* a focused person: Team.tsx sets the window (--wl/--wt/--wr/--wb) around their head */
 
 .frame {
   position: relative;
@@ -74,14 +68,9 @@
 }
 
 /*
- * Jean-Baptiste: centred on him, head just below the top of the frame. Keyed on
- * the last person zoomed (data-zoom), not the current focus, so zooming back out
- * runs about the same point and retraces the zoom in.
+ * The origin (set by Team.tsx) is the last person zoomed, not the current focus,
+ * so zooming back out runs about the same point and retraces the zoom in.
  */
-.team[data-zoom='jean'] {
-  --zoom-origin: 210px 220px;
-}
-
 .team[data-layout='mobile'][data-focus] .zoom {
   transform: scale(1.5);
 }
@@ -115,12 +104,9 @@
   );
 }
 
+/* one per person, placed by Team.tsx */
 .hotspot {
   position: absolute;
-  left: 105px;
-  top: 166px;
-  width: 210px;
-  height: 589px;
 }
 
 /* ---- grid ---- */
@@ -212,7 +198,8 @@
 .listDesktop {
   position: absolute;
   left: 91px;
-  top: 563px;
+  /* sits on the resting window's bottom grid line (719 of 811), growing upward */
+  bottom: 92px;
 }
 
 .listMobile {

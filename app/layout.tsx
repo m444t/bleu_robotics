@@ -21,9 +21,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Bleu Robotics — Industrial AI that learns from demonstration',
+  title: 'Bleu Robotics — Teaching humanoid robots to work in factories',
   description:
-    'Bleu Robotics builds the AI that lets one humanoid robot take on the next task on your line, taught by demonstration.',
+    'Bleu Robotics builds the AI that lets a humanoid robot take on manual tasks on your line: taught in under an hour with a few demonstrations, and a new task at each changeover.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
