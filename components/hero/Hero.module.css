@@ -469,22 +469,15 @@
 
 .logo {
   display: flex;
-  gap: 4.655px;
-  align-items: flex-start;
-  width: 98px;
-  height: 32.044px;
+  width: 100px;
+  height: 32px;
 }
 
-.logo img:first-child {
-  width: 24.439px;
-  height: 32.428px;
-}
-
-.logo img:last-child {
-  width: 68.527px;
-  height: 28.489px;
-  align-self: center;
-  margin-bottom: 1px;
+/* the one-piece logo (public/icons/logo.svg, 244 × 78) at 32 high */
+.logo img {
+  display: block;
+  width: 100px;
+  height: 32px;
 }
 
 .links {
@@ -555,7 +548,8 @@
   align-items: start;
   max-width: 1920px;
   margin: 0 auto;
-  padding: calc(var(--col) * 9 / 1440) 0;
+  /* + 8 below, so the hero ends a little under the text */
+  padding: calc(var(--col) * 9 / 1440) 0 calc(var(--col) * 9 / 1440 + 8px);
 }
 
 .headline {
@@ -572,11 +566,13 @@
 
 .subline {
   grid-column: 4;
+  /* the set lines may run past the column rather than wrap again */
+  white-space: nowrap;
   margin: 0;
   color: var(--navy);
-  font: var(--t-body-l); /* Body/L */
-  font-size: max(18px, calc(var(--col) * 18 / 1440));
-  letter-spacing: var(--t-body-l-ls);
+  font: var(--t-body-m); /* Body/M, as the Vision step text */
+  font-size: max(16px, calc(var(--col) * 16 / 1440));
+  letter-spacing: var(--t-body-m-ls);
   font-variation-settings: 'opsz' 14;
   font-feature-settings: 'case' 1;
 }
@@ -620,7 +616,7 @@
 
   .panelInner {
     display: block;
-    padding: 20px 16px 28px;
+    padding: 20px 16px 36px;
   }
 
   .headline {
@@ -629,7 +625,12 @@
 
   .subline {
     margin-top: 14px;
-    font: var(--t-body-l);
+    font: var(--t-body-m);
+    white-space: normal;
+  }
+
+  .br {
+    display: none;
   }
 }
 

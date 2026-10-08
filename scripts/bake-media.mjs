@@ -17,7 +17,11 @@ const TREATED_W = 2560;
 const figmaInput = await sharp('sources/figma-treated-input.png').greyscale().raw().toBuffer();
 
 const SLIDES = [
+  // the hero's first slide: an operator beside a humanoid robot at a packaging cell
+  // its source is only 2000 wide, so the clean copy keeps more of it (quality 95, not 82)
+  { id: 'factory-cell', src: 'sources/slide-factory-cell.webp', crop: null, cleanQuality: 95 },
   {
+    // was the first slide; still baked, in case it comes back
     id: 'robot-demo',
     src: 'sources/slide-robot-demo.png',
     // below the letterbox bar, above the burnt-in captions, left of the partner logos
@@ -92,7 +96,10 @@ for (const slide of SLIDES) {
   const { width, height } = await sharp(comp).metadata();
 
   const cleanW = Math.min(width, CLEAN_MAX_W);
-  await sharp(comp).resize(cleanW).webp({ quality: 82 }).toFile(`${OUT_DIR}/${slide.id}-clean.webp`);
+  await sharp(comp)
+    .resize(cleanW)
+    .webp({ quality: slide.cleanQuality ?? 82 })
+    .toFile(`${OUT_DIR}/${slide.id}-clean.webp`);
 
   const treatedW = TREATED_W;
   const treatedH = Math.round((treatedW / width) * height);

@@ -356,26 +356,46 @@
 
 .card {
   left: calc(129px + var(--left-shift, -19px));
-  /* taller than Figma's 260 (top 417) for the longer step copy; same bottom, 677 */
-  top: 342px;
-  width: 654px;
-  height: 335px;
+  /* a little taller than Figma's 260 (top 417) for the longer step copy; same bottom, 677 */
+  top: 384px;
+  /* right edge stays on the grey column (783) however far the column shifts left */
+  width: calc(654px - var(--left-shift, -19px));
+  height: 293px;
   overflow: hidden;
   background: #fff;
 }
 
+/* the grey strip between the card and the blue box (783 → 847), the card's height: the
+   card's grid carries on over it, its image placed so the pattern runs straight on */
+.cardGridSide {
+  left: 783px;
+  top: 384px;
+  width: 64px;
+  height: 293px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cardGridSide .cardGrid {
+  left: calc(129px + var(--left-shift, -19px) - 783px);
+}
+
+/* larger than any card, pinned top left and cropped by it, so the lines always fill it */
 .cardGrid {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  max-width: none;
 }
 
 .copy {
   position: absolute;
   left: 40px;
   top: 32px;
-  width: 506px;
+  /* out to the 02 button's left edge: 655 + 64, less the card's left (129, shifted) and 40 */
+  width: calc(550px - var(--left-shift, -19px));
   animation: copy-in 520ms var(--react-ease) both;
 }
 
@@ -406,7 +426,7 @@
 }
 
 .body {
-  max-width: 450px;
+  text-wrap: balance;
   margin: 0;
   color: var(--navy);
   font: var(--t-body-m); /* Body/M */
@@ -417,8 +437,9 @@
 /* ---- 01 / 02 / 03 ---- */
 
 .buttons {
-  left: calc(655px + var(--left-shift, -19px));
-  top: 342px; /* on the card's top edge */
+  /* 03 ends on the blue box's left edge (783 + 64), like Figma — not shifted with the column */
+  left: 655px;
+  top: 384px; /* on the card's top edge */
   display: flex;
 }
 
@@ -553,6 +574,7 @@
 }
 
 .vision[data-layout='mobile'] .scrollStrip,
+.vision[data-layout='mobile'] .cardGridSide,
 .vision[data-layout='mobile'] .tab {
   display: none;
 }

@@ -87,6 +87,8 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  /* hugs its title, up to the column's width */
+  max-width: 100%;
   padding: 8px 12px;
   border: 0;
   border-radius: 0;
@@ -99,14 +101,30 @@
     color 260ms var(--ease);
 }
 
+/* title on the left, the ↗ icon on the card's right edge */
+.itemHead {
+  display: flex;
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
 .itemTitle {
   font: var(--t-label-l); /* Label/L */
   letter-spacing: var(--t-label-l-ls);
   text-transform: uppercase;
-  white-space: nowrap;
-  /* where a role title does wrap (mobile), keep the lines even (style only: nowrap stays) */
-  text-wrap-style: balance;
+  /* a long title wraps inside the column, in lines of even length */
+  text-wrap: balance;
   font-feature-settings: 'case' 1, 'ss05' 1, 'zero' 1, 'lnum' 1, 'tnum' 1;
+}
+
+.itemIcon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  /* level with the first line's cap height */
+  margin-top: 2px;
 }
 
 .itemTags {
@@ -177,19 +195,20 @@
   height: 20px;
 }
 
+/* in colour, as the hero's image header bar */
 .swatches i:nth-child(1) {
   width: 48px;
-  background: #808080;
+  background: var(--blue);
 }
 
 .swatches i:nth-child(2) {
   width: 20px;
-  background: #c1c1c1;
+  background: #fc5c04;
 }
 
 .swatches i:nth-child(3) {
   width: 15px;
-  background: #fff;
+  background: #ffd920;
 }
 
 /*
@@ -215,6 +234,26 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* as tall as the revealed box, so "More info" rides just above the divider */
+  height: 100%;
+  padding-bottom: 16px;
+}
+
+/* "More info" / "← Back to description", as on mobile */
+.more {
+  composes: label;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.more:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
 }
 
 .cta {
@@ -506,7 +545,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-top: 12px;
+  /* 12 more above and below the role's text */
+  padding: 24px 0 12px;
 }
 
 /* the divider overhangs the card a little each side, like the desktop panel's */

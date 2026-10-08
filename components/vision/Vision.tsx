@@ -129,6 +129,9 @@ export default function Vision() {
       setLayout(w <= MOBILE_MAX ? 'mobile' : 'desktop');
       const k = Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H);
       root.style.setProperty('--k', `${k}`);
+      // the same scale for type elsewhere (the blog), so its text matches this section's
+      // on every screen (desktop only; mobile uses the type tokens as they are)
+      document.documentElement.style.setProperty('--type-k', `${w <= MOBILE_MAX ? 1 : k}`);
       // the left column starts on the page's photo edge (46 in the 1440 column, as the team
       // photo and the hero's treated band), wherever this frame sits: a short screen
       // shrinks it by height, so it's narrower than the page column and centred
@@ -146,6 +149,7 @@ export default function Vision() {
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', fit);
+      document.documentElement.style.removeProperty('--type-k');
     };
   }, []);
 
@@ -365,12 +369,18 @@ export default function Vision() {
       </div>
 
       <div className={styles.card}>
-        <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={654} height={260} />
+        <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={800} height={500} />
         <div className={styles.copy} key={step.id} aria-live="polite">
           <p className={styles.label}>[ {step.label} ]</p>
           <h3 className={styles.title}>{step.title}</h3>
           <p className={styles.body}>{step.body}</p>
         </div>
+      </div>
+
+      {/* desktop: the card's grid runs on over the grey column up to the blue box, held in
+          place (sticky) through all three steps */}
+      <div className={styles.cardGridSide} aria-hidden>
+        <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={800} height={500} />
       </div>
 
       <div className={styles.buttons} role="tablist" aria-label="Steps">

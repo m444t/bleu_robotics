@@ -46,6 +46,47 @@ const TONES: Record<Tone, CSSProperties> = {
   yellow: { '--band': '#ffbc2b', '--lines': '#001027', '--chip-border': '#001027', '--chip-ink': '#001027' } as CSSProperties,
 };
 
+/*
+ * The colour bar: the same 88 × 20 frame on every post, filled with three boxes in three
+ * of the brand colours, in random widths. "Random" is seeded from the post title, so the server and the
+ * browser draw the same bar (no hydration mismatch) and a post keeps its bar.
+ */
+const BAR_W = 88;
+// brand colour, and the grey it rests as while the row isn't lit
+const BAR_COLOURS = [
+  { c: '#00088e', g: '#808080' }, // blue
+  { c: '#fe5c3c', g: '#a6a6a6' }, // orange
+  { c: '#ffbc2b', g: '#c1c1c1' }, // yellow
+  { c: '#001027', g: '#ffffff' }, // black
+];
+
+function seeded(text: string) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  // mulberry32
+  return () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** three boxes in three different brand colours: two random cuts in the frame, each box ≥ 10 wide */
+function colourBar(seed: string) {
+  const rand = seeded(seed);
+  // three of the four colours, in random order
+  const pool = [...BAR_COLOURS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const MIN = 10;
+  const a = MIN + Math.floor(rand() * (BAR_W - 3 * MIN + 1));
+  const b = a + MIN + Math.floor(rand() * (BAR_W - a - 2 * MIN + 1));
+  return [a, b - a, BAR_W - b].map((w, i) => ({ w, ...pool[i] }));
+}
+
 const ReadArrow = () => (
   <svg className={styles.readArrow} viewBox="0 0 6.336 5.952" aria-hidden>
     <path
@@ -88,13 +129,16 @@ export default function Blog() {
                 <span className={styles.chip}>Last update: {p.updated}</span>
               </span>
               <span className={styles.body}>
-                <span className={styles.title}>{p.title}</span>
-                <span className={styles.text}>
+                {/* the team tag heads the title, like the Vision step label */}
+                <span className={styles.head}>
                   <span className={styles.tags}>
                     <span className={styles.team}>[ {p.team} ]</span>
                     {/* mobile only: on desktop the date is the chip on the band */}
                     <span className={styles.date}>Last update: {p.updated}</span>
                   </span>
+                  <span className={styles.title}>{p.title}</span>
+                </span>
+                <span className={styles.text}>
                   <span className={styles.excerpt}>{p.excerpt}</span>
                 </span>
               </span>
@@ -103,9 +147,9 @@ export default function Blog() {
                   {p.read} <ReadArrow />
                 </span>
                 <span className={styles.colorBar} aria-hidden>
-                  <i />
-                  <i />
-                  <i />
+                  {colourBar(p.title).map((b, j) => (
+                    <i key={j} style={{ '--w': b.w, '--c': b.c, '--g': b.g } as CSSProperties} />
+                  ))}
                 </span>
               </span>
             </a>
