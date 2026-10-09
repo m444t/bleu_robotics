@@ -108,7 +108,7 @@ export default function Blog() {
   return (
     <section className={styles.blog} id="blog" aria-labelledby="blog-title">
       <h2 id="blog-title" className={styles.heading}>
-        Technical notes from the people building it, with the conditions behind every number.
+        Technical notes
       </h2>
 
       {/* hover lights a row only with a mouse; touch taps go straight to the link */}

@@ -239,6 +239,12 @@
   padding-bottom: 16px;
 }
 
+/* while the box opens it is shorter than its text: keep every item at its own size (the
+   overflow is clipped) instead of squeezing the title button */
+.inner > * {
+  flex-shrink: 0;
+}
+
 /* "More info" / "← Back to description", as on mobile */
 .more {
   composes: label;
