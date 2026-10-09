@@ -242,12 +242,11 @@
 }
 
 .cellLabel {
-  /* reads bottom to top, centred in the room right of the arrow, as in Figma 573:1484
-     (physical margins: in vertical writing the logical ones would be top/bottom) */
+  /* reads bottom to top, against the cell's right edge: the cell's padding (as above and
+     below the arrow) to its right (a physical margin: the logical one would be top/bottom) */
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   margin-left: auto;
-  margin-right: auto;
   color: var(--line);
   font-family: var(--font-space-grotesk), sans-serif;
   font-weight: 700;
