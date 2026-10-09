@@ -116,9 +116,10 @@
 .hLine {
   /* past 1920 the frame stops growing; the lines still run to the page edges */
   left: calc(-1 * var(--gutter));
-  bottom: 87.7px;
+  bottom: 87.5px;
   width: calc(1440px + 2 * var(--gutter));
-  height: 1.6px;
+  /* every footer stroke is 2: these lines, the cell dividers and the arrows (step-arrow-mask) */
+  height: 2px;
   background: var(--line);
 }
 
@@ -129,10 +130,10 @@
 .vLine {
   position: absolute;
   /* on the careers panel's left edge (670 in the same scaled 1440 frame), centred on it */
-  left: 669.2px;
+  left: 669px;
   top: 0;
   bottom: 0;
-  width: 1.6px;
+  width: 2px;
   background: var(--line);
 }
 
@@ -201,10 +202,10 @@
 .cell::before {
   content: '';
   position: absolute;
-  left: -0.8px;
+  left: -1px;
   top: 0;
   bottom: 0;
-  width: 1.6px;
+  width: 2px;
   background: var(--line);
 }
 
@@ -221,7 +222,7 @@
   width: calc((638px - var(--d)) * 198 / 594);
 }
 
-/* arrow-in-a-box pictogram (same artwork as the Vision tab, turned to point right) */
+/* arrow-in-a-box pictogram (the Vision tab's artwork, its stroke thinned to 2 here, turned to point right) */
 .cellIcon {
   position: relative;
   width: 131.814px;
@@ -237,8 +238,8 @@
   height: 131.814px;
   transform: translate(-50%, -50%) rotate(-90deg);
   background: var(--line);
-  mask: url('/vision/tab-icon-mask.png') center / 100% 100% no-repeat;
-  -webkit-mask: url('/vision/tab-icon-mask.png') center / 100% 100% no-repeat;
+  mask: url('/footer/step-arrow-mask.png') center / 100% 100% no-repeat;
+  -webkit-mask: url('/footer/step-arrow-mask.png') center / 100% 100% no-repeat;
 }
 
 .cellLabel {
@@ -396,8 +397,8 @@
   padding: 6px;
   gap: 6px;
   /* no grid lines on mobile: the three steps are boxed instead */
-  border: 1.6px solid var(--line);
-  margin-left: -1.6px;
+  border: 2px solid var(--line);
+  margin-left: -2px;
 }
 
 .track[data-layout='mobile'] .cell:first-child {
@@ -441,8 +442,8 @@
   height: 192%;
   transform: translate(-50%, -50%) rotate(-90deg);
   background: var(--line);
-  mask: url('/vision/tab-icon-mask.png') center / 100% 100% no-repeat;
-  -webkit-mask: url('/vision/tab-icon-mask.png') center / 100% 100% no-repeat;
+  mask: url('/footer/step-arrow-mask.png') center / 100% 100% no-repeat;
+  -webkit-mask: url('/footer/step-arrow-mask.png') center / 100% 100% no-repeat;
 }
 
 .track[data-layout='mobile'] .cellLabel {
