@@ -242,7 +242,9 @@
 }
 
 .cellLabel {
+  /* reads bottom to top, as in Figma 573:1484 */
   writing-mode: vertical-rl;
+  transform: rotate(180deg);
   color: var(--line);
   font-family: var(--font-space-grotesk), sans-serif;
   font-weight: 700;

@@ -96,6 +96,17 @@
   user-select: none;
 }
 
+/* the treated photo: Figma 572:2494's render, already cropped to the media box */
+.treatedPhoto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1346.6px;
+  height: 719px;
+  max-width: none;
+  user-select: none;
+}
+
 .clean {
   position: absolute;
   inset: 0;
