@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { EASE_CSS } from '@/lib/motion';
 import styles from './Hero.module.css';
 import { SLIDES, type Slide } from './slides';
+import { startTreatedVideo, TREATED_W } from './videoGradientMap';
 import {
   computeLayout,
   frameAt,
@@ -30,6 +31,8 @@ export default function Hero() {
   const readoutRef = useRef<HTMLElement>(null);
   const treatedTracks = useRef<(HTMLDivElement | null)[]>([]);
   const cleanTracks = useRef<(HTMLDivElement | null)[]>([]);
+  const videos = useRef<(HTMLVideoElement | null)[]>([]);
+  const treatedCanvases = useRef<(HTMLCanvasElement | null)[]>([]);
   const layoutRef = useRef<Layout | null>(null);
   const introDone = useRef(false);
 
@@ -138,9 +141,16 @@ export default function Hero() {
       }, INTRO_HOLD_MS);
     };
 
-    // start once the first composition (both layers) is decoded, or after a timeout
-    const imgs = [treatedTracks.current[0], cleanTracks.current[0]].map((t) => t!.querySelector('img')!);
-    const decoded = Promise.all(imgs.map((img) => img.decode().catch(() => undefined)));
+    // start once the first composition (both layers) is decoded — for a video, its first
+    // frame (the treated canvas draws from it) — or after a timeout
+    const video = videos.current[0];
+    const decoded = video
+      ? new Promise<void>((r) => (video.readyState >= 2 ? r() : video.addEventListener('loadeddata', () => r(), { once: true })))
+      : Promise.all(
+          [treatedTracks.current[0], cleanTracks.current[0]].map((t) =>
+            t!.querySelector('img')!.decode().catch(() => undefined),
+          ),
+        );
     const timeout = new Promise((r) => setTimeout(r, 2500));
     Promise.race([decoded, timeout]).then(run);
 
@@ -150,6 +160,27 @@ export default function Hero() {
       clearTimeout(holdTimer);
     };
   }, [measure, writeFrame, writeMedia, writeResting]);
+
+  /* ---- video slides: the treated canvas maps the clean video live; play only on screen ---- */
+
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stops: (() => void)[] = [];
+    SLIDES.forEach((slide, i) => {
+      const video = videos.current[i];
+      const canvas = treatedCanvases.current[i];
+      if (!slide.video || !video || !canvas) return;
+      stops.push(startTreatedVideo(canvas, video));
+      if (reduced) return video.pause();
+      const io = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      });
+      io.observe(rootRef.current!);
+      stops.push(() => io.disconnect());
+    });
+    return () => stops.forEach((stop) => stop());
+  }, []);
 
   /* ---- responsive: recompute geometry, keep the same system ---- */
 
@@ -241,15 +272,41 @@ export default function Hero() {
             transform: `translate3d(var(--mx-${i}), var(--my-${i}), 0) scale(var(--ms-${i}))`,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={layer === 'treated' ? slide.treated : slide.clean}
-            alt={layer === 'clean' ? slide.alt : ''}
-            aria-hidden={layer === 'treated' || i !== index ? true : undefined}
-            draggable={false}
-            decoding="async"
-            fetchPriority={i === 0 ? 'high' : 'low'}
-          />
+          {slide.video ? (
+            layer === 'treated' ? (
+              <canvas
+                ref={(el) => {
+                  treatedCanvases.current[i] = el;
+                }}
+                width={TREATED_W}
+                height={Math.round((TREATED_W * slide.height) / slide.width)}
+              />
+            ) : (
+              <video
+                ref={(el) => {
+                  videos.current[i] = el;
+                }}
+                src={slide.video}
+                aria-label={slide.alt}
+                aria-hidden={i !== index ? true : undefined}
+                muted
+                loop
+                autoPlay
+                playsInline
+                preload={i === 0 ? 'auto' : 'metadata'}
+              />
+            )
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={layer === 'treated' ? slide.treated : slide.clean}
+              alt={layer === 'clean' ? slide.alt : ''}
+              aria-hidden={layer === 'treated' || i !== index ? true : undefined}
+              draggable={false}
+              decoding="async"
+              fetchPriority={i === 0 ? 'high' : 'low'}
+            />
+          )}
         </div>
         <span className={styles.edge} aria-hidden />
       </div>

@@ -13,8 +13,11 @@ export type Slide = {
   id: string;
   caption: string;
   alt: string;
-  clean: string;
-  treated: string;
+  /** photo slides: the baked clean + treated images (scripts/bake-media.mjs) */
+  clean?: string;
+  treated?: string;
+  /** video slides: the clean layer plays it, the treated layer maps it live (videoGradientMap.ts) */
+  video?: string;
   width: number;
   height: number;
   fit: MediaFit;
@@ -28,15 +31,27 @@ const media = Object.fromEntries(manifest.map((m) => [m.id, m]));
 
 const ALL_SLIDES: Slide[] = [
   {
+    // the hero's first slide: a 9.4 s loop, 1920 × 1080
+    id: 'robot-arm',
+    video: '/media/robot-arm.webm',
+    width: 1920,
+    height: 1080,
+    caption: 'Test cell — robot arm',
+    alt: 'A robot arm works at a test rack in a bright lab',
+    fit: { zoom: 1, fx: 0.5, fy: 0.5 },
+    introFit: { zoom: 1.12, fx: 0.5, fy: 0.5 },
+  },
+  {
+    // the previous first slide
     ...media['factory-cell'],
     caption: 'Factory floor — packaging cell',
     alt: 'An operator in a hi-vis vest works at a packaging cell beside a humanoid robot',
     // the robot and the operator in the middle of the window
     fit: { zoom: 1, fx: 0.55, fy: 0.5 },
     introFit: { zoom: 1.12, fx: 0.5, fy: 0.5 },
+    hidden: true,
   },
   {
-    // the previous first slide
     ...media['robot-demo'],
     caption: 'Factory floor — part handling',
     alt: 'An operator demonstrates a part-handling task to a humanoid robot',
