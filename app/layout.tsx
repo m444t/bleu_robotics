@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Space_Grotesk, Space_Mono } from 'next/font/google';
+import { DM_Sans, Space_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+// Space Grotesk self-hosted in full (google/fonts' variable TTF as woff2, every glyph and
+// feature kept): the Google Fonts copy drops the slashed zero ('zero') and the serifed
+// capital I ('ss05') the design uses
+const spaceGrotesk = localFont({
+  src: './fonts/SpaceGrotesk-Variable.woff2',
+  weight: '300 700',
   variable: '--font-space-grotesk',
 });
 

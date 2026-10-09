@@ -150,7 +150,7 @@ export default function Team() {
             {/* LAYER 1 + 2: treated photo, clean photo revealed through the window */}
             <div className={styles.media} aria-hidden>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className={styles.photo} src="/media/team-treated.webp" alt="" />
+              <img className={styles.treatedPhoto} src="/media/team-treated.webp" alt="" />
               <div className={styles.clean}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className={styles.photo} src="/media/team-clean.webp" alt="" />

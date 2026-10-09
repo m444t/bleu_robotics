@@ -17,6 +17,11 @@ const TEAM_MAP = {
 const meta = await sharp(SRC).metadata();
 await sharp(SRC).resize(2400).webp({ quality: 82 }).toFile(`${OUT}/team-clean.webp`);
 
+// The treated layer is no longer baked here: public/media/team-treated.webp is Figma
+// 572:2494's own render (2× export, webp q82), cropped to the 1346.6 × 719 media box.
+// Run with BAKE_TREATED=1 to bake the old gradient-mapped version instead.
+if (!process.env.BAKE_TREATED) process.exit(0);
+
 const W = 1400;
 const H = Math.round((W / meta.width) * meta.height);
 const gray = await sharp(SRC).resize(W, H, { fit: 'fill' }).greyscale().raw().toBuffer();
