@@ -1,4 +1,4 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="520.999" height="34.0002" viewBox="0 0 520.999 34.0002" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="588" height="34.0002" viewBox="0 0 588 34.0002" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Group 47">
 <path id="Vector" d="M3.27678 0L4.3121e-08 0L4.3121e-08 34H3.27678V0Z" fill="#001027"/>
 <path id="Vector_2" d="M16.3862 0.000135084H13.1094V34.0001H16.3862V0.000135084Z" fill="#001027"/>
@@ -50,5 +50,11 @@
 <path id="Vector_48" d="M501.342 0.000155982H491.512V34.0002H501.342V0.000155982Z" fill="#001027"/>
 <path id="Vector_49" d="M514.451 0.000156554H504.621V34.0002H514.451V0.000156554Z" fill="#001027"/>
 <path id="Vector_50" d="M520.999 0.000157127H517.723V34.0002H520.999V0.000157127Z" fill="#001027"/>
+<path id="Vector_51" d="M527.5616 0H524.2848V34H527.5616V0Z" fill="#001027"/>
+<path id="Vector_52" d="M540.671 0H537.3942V34H540.671V0Z" fill="#001027"/>
+<path id="Vector_53" d="M553.7753 0H543.9449V34H553.7753V0Z" fill="#001027"/>
+<path id="Vector_54" d="M566.8808 0H557.0504V34H566.8808V0Z" fill="#001027"/>
+<path id="Vector_55" d="M573.4327 0H570.1559V34H573.4327V0Z" fill="#001027"/>
+<path id="Vector_56" d="M588 0H576.7184V34H588V0Z" fill="#001027"/>
 </g>
 </svg>

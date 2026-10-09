@@ -9,13 +9,19 @@ import { applyGradientMap, histogramMatchLut } from './gradient-map.mjs';
 const OUT_DIR = 'public/media';
 const MANIFEST = 'components/hero/media-manifest.json';
 const CLEAN_MAX_W = 2560;
-const TREATED_MAX_W = 1600; // ~1 image px per CSS px at 1440, so the dither grain stays crisp
+// the dither grain is one image px: baked this wide (upscaling smaller sources) it is
+// ~0.6 CSS px at 1440 — a finer grain than at 1600 (~1 CSS px)
+const TREATED_W = 2560;
 
 // Figma's treated input is a graded B/W frame; match every slide to its tonal distribution.
 const figmaInput = await sharp('sources/figma-treated-input.png').greyscale().raw().toBuffer();
 
 const SLIDES = [
+  // the hero's first slide: an operator beside a humanoid robot at a packaging cell
+  // its source is only 2000 wide, so the clean copy keeps more of it (quality 95, not 82)
+  { id: 'factory-cell', src: 'sources/slide-factory-cell.webp', crop: null, cleanQuality: 95 },
   {
+    // was the first slide; still baked, in case it comes back
     id: 'robot-demo',
     src: 'sources/slide-robot-demo.png',
     // below the letterbox bar, above the burnt-in captions, left of the partner logos
@@ -90,9 +96,12 @@ for (const slide of SLIDES) {
   const { width, height } = await sharp(comp).metadata();
 
   const cleanW = Math.min(width, CLEAN_MAX_W);
-  await sharp(comp).resize(cleanW).webp({ quality: 82 }).toFile(`${OUT_DIR}/${slide.id}-clean.webp`);
+  await sharp(comp)
+    .resize(cleanW)
+    .webp({ quality: slide.cleanQuality ?? 82 })
+    .toFile(`${OUT_DIR}/${slide.id}-clean.webp`);
 
-  const treatedW = Math.min(width, TREATED_MAX_W);
+  const treatedW = TREATED_W;
   const treatedH = Math.round((treatedW / width) * height);
   const gray = await sharp(comp).resize(treatedW, treatedH, { fit: 'fill' }).greyscale().raw().toBuffer();
   const lut = histogramMatchLut(gray, figmaInput);

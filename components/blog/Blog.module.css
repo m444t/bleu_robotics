@@ -13,10 +13,12 @@
   --ease: cubic-bezier(0.5, 0, 0.5, 1);
   --dur: 320ms;
   --col: min(100vw, 1920px);
-  /* title + description sized like the Vision card's (Heading/h3, Body/M), which scale
-     with the page from 1440 up to the 1920 column */
-  --title-fs: max(28px, calc(var(--col) * 28 / 1440));
-  --text-fs: max(16px, calc(var(--col) * 16 / 1440));
+  /* text sized exactly as the Vision section's (Heading/h3, Body/M, Label/M): its scale,
+     --type-k (set by Vision.tsx from the width and the viewport height), on every screen */
+  --title-fs: calc(28px * var(--type-k, 1));
+  --text-fs: calc(16px * var(--type-k, 1));
+  /* the team tag and "5 min read": Label/M, as the Vision step label */
+  --tag-fs: calc(12px * var(--type-k, 1));
   /* band: 208 at 1440, growing to 20% wider (249.6) by 1920 */
   --band-w: clamp(208px, 208px + (100vw - 1440px) * 0.0867, 249.6px);
 
@@ -24,8 +26,8 @@
   position: relative;
   z-index: 3;
   background: var(--grey-light);
-  /* side padding = gutter outside the 1920 column + the design's 92px margin */
-  padding: 64px max(16px, calc((100% - min(100%, 1920px)) / 2 + var(--col) * 92 / 1440));
+  /* side padding = gutter outside the 1920 column + 46: the photos' edge (Figma has 92) */
+  padding: 64px max(16px, calc((100% - min(100%, 1920px)) / 2 + var(--col) * 46 / 1440));
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -59,14 +61,10 @@
   --ci: var(--grey-light);
   --ink: var(--navy);
   --accent: var(--grey);
-  --bar-1: var(--grey);
-  --bar-2: var(--grey-mid);
-  --bar-3: #fff;
 
   position: relative;
   display: flex;
   align-items: flex-start;
-  min-height: 100px;
   padding-left: var(--band-w);
   background: var(--grey-light);
   /* white on the resting rows; invisible once the row turns white */
@@ -84,9 +82,6 @@
   --ci: var(--chip-ink);
   --ink: var(--blue);
   --accent: var(--blue);
-  --bar-1: #fe5c3c;
-  --bar-2: #ffbc2b;
-  --bar-3: var(--navy);
 
   background: #fff;
 }
@@ -151,29 +146,45 @@
   align-items: center;
 }
 
-.title {
-  /* wide enough for two lines at the larger size */
-  flex: 0 1 max(360px, calc(var(--col) * 360 / 1440));
+/* tag over title, from the top of the row in every post; tall enough for a two-line
+   title, so every row is the same height */
+.head {
+  /* wide enough for two title lines at the larger size */
+  flex: 0 1 calc(360px * var(--type-k, 1));
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: calc(var(--tag-fs) * 1.2 + 12px + var(--title-fs) * 2);
+  box-sizing: content-box;
   margin-left: 33px;
+  /* 16 above and below, less the row's 2px border */
+  padding: 14px 0;
+}
+
+.title {
   color: var(--ink);
   font: var(--t-h3); /* Heading/h3, as the Vision card title */
   font-size: var(--title-fs);
   letter-spacing: var(--t-h3-ls);
+  text-wrap: balance;
   text-transform: uppercase;
   font-feature-settings: 'zero' 1, 'ss05' 1, 'lnum' 1, 'tnum' 1;
   transition: color var(--dur) var(--ease);
 }
 
 .text {
-  /* 526 at 1440; on wider rows it takes the spare width up to the read column */
+  /* 526 at 1440; on wider rows it takes the spare width, up to 620 (scaling with the page) */
   flex: 1 1 526px;
-  align-self: flex-start;
+  max-width: max(526px, calc(var(--col) * 620 / 1440));
+  align-self: center;
   display: flex;
   flex-direction: column;
   gap: 1px;
   margin-left: 38px;
-  /* Figma's 13 / 11.6 less the row's 2px border */
-  padding: 11px 0 9px;
+  /* 16 above and below, less the row's 2px border */
+  padding: 14px 0;
 }
 
 .tags {
@@ -202,6 +213,13 @@
   font: var(--t-body-m); /* Body/M, as the Vision card text */
   font-size: var(--text-fs);
   letter-spacing: var(--t-body-m-ls);
+  /* always three lines tall, so every row is the same height; longer text ends in … */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  min-height: calc(3 * 1.3em);
   font-variation-settings: 'opsz' 14;
   font-feature-settings: 'case' 1;
 }
@@ -210,11 +228,14 @@
 
 .meta {
   flex: none;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: space-between;
   margin-left: auto;
-  padding: 12px 15px 0 46px;
+  /* read at the top, the colour bar at the bottom, 16 from the row's edges */
+  padding: 14px 15px 14px 46px;
 }
 
 .read {
@@ -242,31 +263,49 @@
   }
 }
 
+/* same frame on every post; its boxes (widths --w, colours --c / resting grey --g) come from Blog.tsx */
 .colorBar {
   display: flex;
+  width: 88px;
   height: 20px;
-  margin-top: 35.6px;
 }
 
 .colorBar i {
   display: block;
+  flex: var(--w) 0 0;
   height: 100%;
+  background: var(--g);
   transition: background-color var(--dur) var(--ease);
 }
 
-.colorBar i:nth-child(1) {
-  width: 48px;
-  background: var(--bar-1);
+.row[data-lit] .colorBar i {
+  background: var(--c);
 }
 
-.colorBar i:nth-child(2) {
-  width: 24px;
-  background: var(--bar-2);
-}
+/*
+ * desktop: sized like the Vision section, at its scale (--type-k) — the heading as its h2,
+ * the team tag as its step label (Label/M)
+ */
+@media (min-width: 768px) {
+  /* space below the section: 128 (twice Figma's 64), + 20%; above it, 8% less than that */
+  .blog {
+    padding-block: 142px 154px;
+  }
 
-.colorBar i:nth-child(3) {
-  width: 16px;
-  background: var(--bar-3);
+  .heading {
+    max-width: calc(804px * var(--type-k, 1));
+    font-size: calc(38px * var(--type-k, 1));
+  }
+
+  .tags {
+    font: var(--t-label-m); /* Label/M, as the Vision step label */
+    font-size: var(--tag-fs);
+    letter-spacing: var(--t-label-m-ls);
+  }
+
+  .read {
+    font-size: var(--tag-fs);
+  }
 }
 
 /* ---- tablet: the title sits above the text ---- */
@@ -278,10 +317,15 @@
     padding: 13px 0 13px 33px;
   }
 
-  .title {
+  .head {
     flex: none;
-    max-width: 420px;
+    min-height: 0;
     margin-left: 0;
+    padding: 0;
+  }
+
+  .title {
+    max-width: 420px;
   }
 
   .text {
@@ -310,14 +354,11 @@
     --l: var(--lines);
     --ink: var(--blue);
     --accent: var(--navy);
-    --bar-1: #fe5c3c;
-    --bar-2: #ffbc2b;
-    --bar-3: var(--navy);
 
     display: grid;
     grid-template-columns: 60px minmax(0, 1fr) 20px;
-    /* the empty first and last tracks centre the middle column */
-    grid-template-rows: 1fr auto auto auto 1fr;
+    /* 12 above and below; the text from the top, in the same place on every post */
+    grid-template-rows: 12px auto auto auto 12px;
     column-gap: 8px;
     align-items: stretch;
     min-height: 88px;
@@ -346,6 +387,7 @@
   }
 
   .body,
+  .head,
   .text,
   .meta {
     display: contents;
@@ -369,6 +411,8 @@
     grid-column: 2;
     grid-row: 3;
     max-width: 239px;
+    /* room for two lines (line-height 1), so a one-line title keeps the row's height */
+    min-height: 2em;
     margin-top: 6px;
     font: var(--t-h3); /* Mobile/Heading/h3 */
     letter-spacing: var(--t-h3-ls);
@@ -380,11 +424,12 @@
     margin-top: 6px;
   }
 
-  /* upright: navy on top, orange at the bottom */
+  /* upright, the boxes stacked in the same proportions */
   .colorBar {
     grid-column: 3;
     grid-row: 1 / -1;
     flex-direction: column-reverse;
+    width: auto;
     height: auto;
     margin: 0;
   }
@@ -392,20 +437,7 @@
   .colorBar i {
     width: 100%;
     height: auto;
-  }
-
-  .colorBar i:nth-child(1) {
-    width: 100%;
-    flex: 48 0 0;
-  }
-
-  .colorBar i:nth-child(2) {
-    width: 100%;
-    flex: 24 0 0;
-  }
-
-  .colorBar i:nth-child(3) {
-    width: 100%;
-    flex: 16 0 0;
+    /* every mobile row shows its colours */
+    background: var(--c);
   }
 }

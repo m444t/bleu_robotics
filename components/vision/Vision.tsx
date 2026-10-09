@@ -8,6 +8,8 @@ import FigureArt, { artDuration } from './FigureArt';
 
 const DESIGN_W = 1440;
 const DESIGN_H = 762;
+// the tab / scroll strip's x in the Figma frame; the whole left column moves with it (--left-shift)
+const TAB_LEFT = 65;
 const MOBILE_MAX = 767;
 const WIDE_MIN = 1920; // composition stops growing here and stays centred
 const IDLE_MS = 2000;
@@ -125,9 +127,24 @@ export default function Vision() {
       const w = root.clientWidth;
       const h = stageRef.current?.clientHeight || window.innerHeight;
       setLayout(w <= MOBILE_MAX ? 'mobile' : 'desktop');
-      root.style.setProperty('--k', `${Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H)}`);
+      const k = Math.min(Math.min(w, WIDE_MIN) / DESIGN_W, h / DESIGN_H);
+      root.style.setProperty('--k', `${k}`);
+      // the same scale for type elsewhere (the blog), so its text matches this section's
+      // on every screen (desktop only; mobile uses the type tokens as they are)
+      document.documentElement.style.setProperty('--type-k', `${w <= MOBILE_MAX ? 1 : k}`);
+      // the left column starts on the page's photo edge (46 in the 1440 column, as the team
+      // photo and the hero's treated band), wherever this frame sits: a short screen
+      // shrinks it by height, so it's narrower than the page column and centred
+      const col = Math.min(w, WIDE_MIN);
+      const edge = (w - col) / 2 + (46 * col) / DESIGN_W;
+      const frameLeft = (w - DESIGN_W * k) / 2;
+      root.style.setProperty('--left-shift', `${(edge - frameLeft) / k - TAB_LEFT}px`);
       // mobile: the figure panel spans the full screen width
       root.style.setProperty('--fig-s', `${w / 657}`);
+      // how far down the frame the fixed header reaches (frame px), so the step tab can stay
+      // clear of it on screens where the frame fills the height
+      const head = document.querySelector('header')?.getBoundingClientRect().height ?? 0;
+      root.style.setProperty('--head-clear', `${Math.max(0, (head - (h - DESIGN_H * k) / 2) / k)}px`);
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -136,6 +153,7 @@ export default function Vision() {
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', fit);
+      document.documentElement.style.removeProperty('--type-k');
     };
   }, []);
 
@@ -331,7 +349,7 @@ export default function Vision() {
 
   const step = STEPS[active];
 
-  const heading = <h2 className={styles.heading}>Be the first to deploy humanoid robots in factories at scale.</h2>;
+  const heading = <h2 className={styles.heading}>Deploying humanoid robots at scale, starting where they matter most.</h2>;
 
   const leftColumn = (
     <>
@@ -343,7 +361,7 @@ export default function Vision() {
           </span>
         </div>
         <div className={styles.scrollBarcode}>
-          <img src="/vision/scroll-barcode.svg" alt="" width={521} height={34} />
+          <img src="/vision/scroll-barcode.svg" alt="" width={588} height={34} />
         </div>
       </div>
 
@@ -354,8 +372,15 @@ export default function Vision() {
         </span>
       </div>
 
+      {/* desktop: one grid behind the card and the grey strip beside it (up to the blue box),
+          so the isometric box runs on unbroken from white into grey */}
+      <div className={styles.gridWindow} aria-hidden>
+        <img className={styles.cardGrid} src="/vision/isocube.svg" alt="" width={1160} height={762} />
+      </div>
+
       <div className={styles.card}>
-        <img className={styles.cardGrid} src="/vision/isogrid.svg" alt="" width={654} height={260} />
+        {/* mobile: the same grid inside the card */}
+        <img className={styles.cardGrid} src="/vision/isocube.svg" alt="" width={1160} height={762} />
         <div className={styles.copy} key={step.id} aria-live="polite">
           <p className={styles.label}>[ {step.label} ]</p>
           <h3 className={styles.title}>{step.title}</h3>

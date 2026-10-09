@@ -35,8 +35,9 @@ const FRAME = { heads: 1.8, topMargin: 0.08, rise: -0.1 };
 // the rig faces +X; turn it to the camera, then well round to its left — towards the
 // open-positions list on the left of the section
 const BASE_YAW = -Math.PI / 2 - 1.0;
-// grid bas-relief (reliefGrid.ts) instead of the gradient-mapped robot — off for now
-const RELIEF_GRID = false;
+// grid bas-relief (reliefGrid.ts) instead of the gradient-mapped robot: a full grid field
+// whose lines rise and bend with the robot's height
+const RELIEF_GRID = true;
 
 export default function Robot({ active }: { active: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);

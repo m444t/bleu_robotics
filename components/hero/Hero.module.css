@@ -3,6 +3,7 @@
  *   --stage-t / --stage-b   media viewport (navbar bottom, headline panel top)
  *   --stage-h               unitless stage height (for scaleY on vertical rules)
  *   --win-l/t/r/b           grid intersections = clean-image window
+ *   --fx                    0 → 1: the treated layer draws in from full view to its band
  *   --mx-i / --my-i / --ms-i  media framing of slide i (shared by both layers)
  */
 
@@ -27,6 +28,9 @@
   --win-r: 0px;
   --win-b: 0px;
   --ui: 0;
+  --fx: 1;
+  /* the treated band around the clean window: as wide as the team photo's (45 at 1440) */
+  --tb: calc(var(--col) * 45 / 1440);
 
   position: relative;
   /* above the later sections, so the fixed navbar stays on top of them */
@@ -55,9 +59,19 @@
   inset: 0;
 }
 
+/*
+ * Full view while the intro loads (--fx 0: the whole stage); then, with the headline
+ * panel, it draws in to a band --tb wide around the clean window (--fx 1), the grey
+ * page showing beyond it — like the team photo.
+ */
 .treated {
   background: var(--blue);
-  clip-path: inset(var(--stage-t) 0 calc(100% - var(--stage-b)) 0);
+  clip-path: inset(
+    calc(var(--stage-t) + (var(--win-t) - var(--tb) - var(--stage-t)) * var(--fx))
+      calc((100% - var(--win-r) - var(--tb)) * var(--fx))
+      calc(100% - var(--stage-b) - (var(--win-b) + var(--tb) - var(--stage-b)) * var(--fx))
+      calc((var(--win-l) - var(--tb)) * var(--fx))
+  );
 }
 
 /* LAYER 3 — the reveal: a rectangle whose edges ARE the grid lines */
@@ -455,22 +469,15 @@
 
 .logo {
   display: flex;
-  gap: 4.655px;
-  align-items: flex-start;
-  width: 98px;
-  height: 32.044px;
+  width: 100px;
+  height: 32px;
 }
 
-.logo img:first-child {
-  width: 24.439px;
-  height: 32.428px;
-}
-
-.logo img:last-child {
-  width: 68.527px;
-  height: 28.489px;
-  align-self: center;
-  margin-bottom: 1px;
+/* the one-piece logo (public/icons/logo.svg, 244 × 78) at 32 high */
+.logo img {
+  display: block;
+  width: 100px;
+  height: 32px;
 }
 
 .links {
@@ -536,11 +543,13 @@
 
 .panelInner {
   display: grid;
-  grid-template-columns: calc(100% * 93 / 1440) calc(100% * 653 / 1440) calc(100% * 17 / 1440) calc(100% * 585 / 1440) 1fr;
+  /* the headline starts on the photos' edge (46; Figma has 93), the subline stays put */
+  grid-template-columns: calc(100% * 46 / 1440) calc(100% * 653 / 1440) calc(100% * 64 / 1440) calc(100% * 585 / 1440) 1fr;
   align-items: start;
   max-width: 1920px;
   margin: 0 auto;
-  padding: calc(var(--col) * 9 / 1440) 0;
+  /* + 8 below, so the hero ends a little under the text */
+  padding: calc(var(--col) * 9 / 1440) 0 calc(var(--col) * 9 / 1440 + 8px);
 }
 
 .headline {
@@ -557,11 +566,13 @@
 
 .subline {
   grid-column: 4;
+  /* the set lines may run past the column rather than wrap again */
+  white-space: nowrap;
   margin: 0;
   color: var(--navy);
-  font: var(--t-body-l); /* Body/L */
-  font-size: max(18px, calc(var(--col) * 18 / 1440));
-  letter-spacing: var(--t-body-l-ls);
+  font: var(--t-body-m); /* Body/M, as the Vision step text */
+  font-size: max(16px, calc(var(--col) * 16 / 1440));
+  letter-spacing: var(--t-body-m-ls);
   font-variation-settings: 'opsz' 14;
   font-feature-settings: 'case' 1;
 }
@@ -605,7 +616,7 @@
 
   .panelInner {
     display: block;
-    padding: 20px 16px 28px;
+    padding: 20px 16px 36px;
   }
 
   .headline {
@@ -614,7 +625,12 @@
 
   .subline {
     margin-top: 14px;
-    font: var(--t-body-l);
+    font: var(--t-body-m);
+    white-space: normal;
+  }
+
+  .br {
+    display: none;
   }
 }
 

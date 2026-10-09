@@ -49,6 +49,7 @@ export default function Hero() {
     s.setProperty('--win-r', `${f.winR}px`);
     s.setProperty('--win-b', `${f.winB}px`);
     s.setProperty('--ui', `${f.ui}`);
+    s.setProperty('--fx', `${f.fx}`);
     const text = readout(f.count);
     if (readoutRef.current!.textContent !== text) readoutRef.current!.textContent = text;
   }, []);
@@ -290,36 +291,41 @@ export default function Hero() {
 
       {/* LAYER 5 — image UI, pinned to the window corners */}
       <div className={styles.imageUi}>
-        <div className={styles.info}>
-          <p className={styles.label} aria-live="polite">
-            <span className={styles.roll} key={`n${index}`} data-anim={transition ? transition.dir : undefined}>
-              [ {pad2(index + 1)} / {pad2(SLIDES.length)} ]
-            </span>
-          </p>
-          <p className={`${styles.label} ${styles.caption}`}>
-            <span className={styles.roll} key={`c${index}`} data-anim={transition ? transition.dir : undefined}>
-              {current.caption}
-            </span>
-          </p>
-          <div className={styles.progress} aria-hidden>
-            {SLIDES.map((s, i) => (
-              <span key={s.id} data-active={i === index ? 'true' : undefined} />
-            ))}
+        {/* counter, caption, progress and arrows only mean something with more than one slide */}
+        {SLIDES.length > 1 && (
+          <div className={styles.info}>
+            <p className={styles.label} aria-live="polite">
+              <span className={styles.roll} key={`n${index}`} data-anim={transition ? transition.dir : undefined}>
+                [ {pad2(index + 1)} / {pad2(SLIDES.length)} ]
+              </span>
+            </p>
+            <p className={`${styles.label} ${styles.caption}`}>
+              <span className={styles.roll} key={`c${index}`} data-anim={transition ? transition.dir : undefined}>
+                {current.caption}
+              </span>
+            </p>
+            <div className={styles.progress} aria-hidden>
+              {SLIDES.map((s, i) => (
+                <span key={s.id} data-active={i === index ? 'true' : undefined} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.arrows}>
-          <button type="button" className={styles.prev} onClick={() => go(-1)} disabled={!interactive} aria-label="Previous slide">
-            <span className={styles.icon}>
-              <img src="/icons/arrow-dark.svg" alt="" width={16.25} height={12.5} />
-            </span>
-          </button>
-          <button type="button" className={styles.next} onClick={() => go(1)} disabled={!interactive} aria-label="Next slide">
-            <span className={styles.icon}>
-              <img src="/icons/arrow-light.svg" alt="" width={16.25} height={12.5} />
-            </span>
-          </button>
-        </div>
+        {SLIDES.length > 1 && (
+          <div className={styles.arrows}>
+            <button type="button" className={styles.prev} onClick={() => go(-1)} disabled={!interactive} aria-label="Previous slide">
+              <span className={styles.icon}>
+                <img src="/icons/arrow-dark.svg" alt="" width={16.25} height={12.5} />
+              </span>
+            </button>
+            <button type="button" className={styles.next} onClick={() => go(1)} disabled={!interactive} aria-label="Next slide">
+              <span className={styles.icon}>
+                <img src="/icons/arrow-light.svg" alt="" width={16.25} height={12.5} />
+              </span>
+            </button>
+          </div>
+        )}
 
         <div className={styles.deco} aria-hidden>
           <span className={styles.swatches}>
@@ -337,8 +343,7 @@ export default function Hero() {
       {/* LAYER 6 — page UI riding the stage boundaries */}
       <header className={styles.nav}>
         <a href="/" className={styles.logo} aria-label="Bleu Robotics home">
-          <img src="/icons/logo-mark.svg" alt="" width={24.439} height={32.428} />
-          <img src="/icons/logo-word.svg" alt="" width={68.527} height={28.489} />
+          <img src="/icons/logo.svg" alt="" width={100} height={32} />
         </a>
         <nav className={styles.links} aria-label="Primary">
           <a href="#blog">Blog</a>
@@ -356,10 +361,13 @@ export default function Hero() {
 
       <div className={styles.panel}>
         <div className={styles.panelInner} ref={panelRef}>
-          <h1 className={styles.headline}>Industrial AI that learns from demonstration.</h1>
+          <h1 className={styles.headline}>Teaching humanoid robots to work in factories</h1>
+          {/* desktop: set line breaks (before "builds", "Teach", "and a new task"); mobile wraps freely */}
           <p className={styles.subline}>
-            Bleu Robotics builds the AI that lets one humanoid robot take on the next task on your line. An operator teaches it
-            by demonstration, and the same robot is retaught whenever the work changes.
+            Drawing on two decades of robot learning research, Bleu Robotics <br className={styles.br} />
+            builds the AI that lets a humanoid robot take on manual tasks on your line. <br className={styles.br} />
+            Teach the robot a task in under an hour with a few demonstrations, <br className={styles.br} />
+            and a new task at each changeover.
           </p>
         </div>
       </div>

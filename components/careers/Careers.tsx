@@ -142,6 +142,16 @@ export default function Careers() {
   );
 }
 
+/** a role's title, and the ↗ icon on the card's right, apart from it */
+const ItemHead = ({ title }: { title: string }) => (
+  <span className={styles.itemHead}>
+    <span className={styles.itemTitle}>{title}</span>
+    <svg className={styles.itemIcon} viewBox="0 0 12 12" aria-hidden>
+      <path d="M2 10 10 2M3.5 2H10v6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  </span>
+);
+
 const Note = () => (
   <p className={styles.note}>
     We hire researchers and engineers who want their work judged on a factory floor, not in a simulator.
@@ -168,10 +178,17 @@ const Intro = ({ job }: { job: Job }) => (
   </div>
 );
 
+type View = 'desc' | 'more';
+
 function DesktopCareers() {
-  const [requested, setRequested] = useState<number | null>(null);
+  // `${role}:${view}`, as on mobile: "More info" / "Back to description" swap the panel's
+  // text with the same divider move as switching roles
+  const [requested, setRequested] = useState<string | null>(null);
   const { shown, open } = useReveal(requested);
-  const job = shown === null ? null : JOBS[shown];
+  const [shownRole, view] = shown ? (shown.split(':') as [string, View]) : [null, null];
+  const role = shownRole === null ? null : Number(shownRole);
+  const job = role === null ? null : JOBS[role];
+  const isRequested = (i: number) => requested?.startsWith(`${i}:`) ?? false;
   // with no role open, hovering one previews its code + tags in the readout
   const [hovered, setHovered] = useState<number | null>(null);
   const readout = job ?? (requested === null && hovered !== null ? JOBS[hovered] : EMPTY);
@@ -192,14 +209,14 @@ function DesktopCareers() {
                   <button
                     type="button"
                     className={styles.item}
-                    aria-pressed={requested === i}
+                    aria-pressed={isRequested(i)}
                     aria-controls="careers-panel"
                     // clicking the open role again closes it, back to the robot
-                    onClick={() => setRequested((r) => (r === i ? null : i))}
+                    onClick={() => setRequested(isRequested(i) ? null : `${i}:desc`)}
                     onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(i)}
                     onPointerLeave={() => setHovered(null)}
                   >
-                    <span className={styles.itemTitle}>{j.title} ↗</span>
+                    <ItemHead title={j.title} />
                     <span className={styles.itemTags}>{tagLine(j.tags)}</span>
                   </button>
                 </li>
@@ -233,8 +250,16 @@ function DesktopCareers() {
                       <img src="/icons/arrow-light.svg" alt="" width={16.25} height={12.5} />
                     </span>
                   </a>
-                  <Intro job={job} />
-                  <Lists job={job} />
+                  {view === 'more' ? <Lists job={job} /> : <Intro job={job} />}
+                  {/* at the foot of the text, just above the divider */}
+                  <button
+                    type="button"
+                    className={styles.more}
+                    tabIndex={open ? 0 : -1}
+                    onClick={() => setRequested(`${role}:${view === 'more' ? 'desc' : 'more'}`)}
+                  >
+                    {view === 'more' ? '← Back to description' : 'More info'}
+                  </button>
                 </>
               )}
             </div>
@@ -257,7 +282,7 @@ function DesktopCareers() {
               type="button"
               className={styles.next}
               aria-controls="careers-panel"
-              onClick={() => setRequested(((shown ?? -1) + 1) % JOBS.length)}
+              onClick={() => setRequested(`${((role ?? -1) + 1) % JOBS.length}:desc`)}
             >
               Read next offer →
             </button>
@@ -268,7 +293,6 @@ function DesktopCareers() {
   );
 }
 
-type View = 'desc' | 'more';
 
 function MobileCareers() {
   // `${role}:${view}` — a string, so asking for the same card + view twice is a no-op
@@ -302,7 +326,7 @@ function MobileCareers() {
               style={{ '--h': `${h}px` } as CSSProperties}
             >
               <button type="button" className={styles.mCardHead} aria-expanded onClick={() => setRequested(null)}>
-                <span className={styles.itemTitle}>{j.title} ↗</span>
+                <ItemHead title={j.title} />
                 <span className={styles.itemTags}>{tagLine(j.tags)}</span>
               </button>
 
@@ -335,7 +359,7 @@ function MobileCareers() {
                 aria-expanded={false}
                 onClick={() => setRequested(`${i}:desc`)}
               >
-                <span className={styles.itemTitle}>{j.title} ↗</span>
+                <ItemHead title={j.title} />
                 <span className={styles.itemTags}>{tagLine(j.tags)}</span>
               </button>
             </li>

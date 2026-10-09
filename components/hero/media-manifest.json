@@ -1,5 +1,12 @@
 [
   {
+    "id": "factory-cell",
+    "clean": "/media/factory-cell-clean.webp",
+    "treated": "/media/factory-cell-treated.webp",
+    "width": 2000,
+    "height": 1333
+  },
+  {
     "id": "robot-demo",
     "clean": "/media/robot-demo-clean.webp",
     "treated": "/media/robot-demo-treated.webp",

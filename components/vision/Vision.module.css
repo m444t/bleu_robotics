@@ -128,7 +128,7 @@
 /* ------------------------------------------------------------------ */
 
 .heading {
-  left: 165px;
+  left: calc(165px + var(--left-shift, -19px));
   top: 152px;
   width: 409px;
   margin: 0;
@@ -243,16 +243,18 @@
 /* ---- scroll strip ---- */
 
 .scrollStrip {
-  left: 65px;
-  top: 156px;
-  width: 64px;
-  height: 521px;
+  left: calc(65px + var(--left-shift, -19px));
+  /* behind the tab from 50 below its top, down to the card's bottom (677) */
+  top: 89px;
+  /* 56 (Figma 64): the scroll bar and the barcode 28 each */
+  width: 56px;
+  height: 588px;
   display: flex;
 }
 
 .scrollBar {
   position: relative;
-  width: 30px;
+  width: 28px;
   height: 100%;
   background: var(--navy);
 }
@@ -262,7 +264,7 @@
   position: absolute;
   left: 0;
   bottom: 4px;
-  width: 30px;
+  width: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -298,7 +300,7 @@
 
 .scrollBarcode {
   position: relative;
-  width: 34px;
+  width: 28px;
   height: 100%;
 }
 
@@ -306,19 +308,20 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 521px;
-  height: 34px;
+  width: 588px;
+  height: 28px;
   max-width: none;
   transform-origin: 0 0;
-  transform: translateX(34px) rotate(90deg);
+  transform: translateX(28px) rotate(90deg);
 }
 
 /* ---- step tab ---- */
 
 .tab {
-  left: 65px;
-  top: 106px;
-  width: 64px;
+  left: calc(65px + var(--left-shift, -19px));
+  /* 8 below the grey column's top (the panel's, 39), and never under the fixed header */
+  top: max(47px, var(--head-clear, 0px));
+  width: 56px;
   height: 161px;
   background: var(--step-color);
   color: var(--step-ink);
@@ -329,10 +332,11 @@
 
 .tabIcon {
   position: absolute;
-  left: 8px;
-  top: 8px;
+  /* 4 from the tab's top and sides; 48 × 91 is the icon's own ratio (197 × 373) */
+  left: 4px;
+  top: 4px;
   width: 48px;
-  height: 92px;
+  height: 91px;
   background: currentColor;
   mask: url('/vision/tab-icon-mask.png') center / contain no-repeat;
   -webkit-mask: url('/vision/tab-icon-mask.png') center / contain no-repeat;
@@ -355,26 +359,55 @@
 /* ---- text card ---- */
 
 .card {
-  left: 129px;
-  top: 417px;
-  width: 654px;
-  height: 260px;
+  /* right after the 56-wide left bar (65 + 56) */
+  left: calc(121px + var(--left-shift, -19px));
+  /* a little taller than Figma's 260 (top 417) for the longer step copy; same bottom, 677 */
+  top: 384px;
+  /* right edge stays on the grey column (783) however far the column shifts left */
+  width: calc(662px - var(--left-shift, -19px));
+  height: 293px;
   overflow: hidden;
   background: #fff;
 }
 
+/* desktop: one window over the card and the grey strip beside it (card left → 847, the blue
+   box's left edge; 384 → 677), holding the one grid. White under the card's part only, so the
+   strip shows the grey column through the same lines. The card itself goes clear on top. */
+.gridWindow {
+  left: calc(121px + var(--left-shift, -19px));
+  top: 384px;
+  width: calc(726px - var(--left-shift, -19px));
+  height: 293px;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(to right, #fff calc(100% - 64px), transparent 0);
+}
+
+.vision[data-layout='desktop'] .card {
+  background: transparent;
+}
+
+.vision[data-layout='desktop'] .card .cardGrid {
+  display: none;
+}
+
+/* the box (scripts/vision-isocube.mjs): drawn in frame coordinates from x −300; placed from
+   the card's left edge, which the window shares */
 .cardGrid {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: calc(-300px - 121px - var(--left-shift, -19px));
+  top: -384px;
+  width: 1160px;
+  height: 762px;
+  max-width: none;
 }
 
 .copy {
   position: absolute;
   left: 40px;
   top: 32px;
-  width: 506px;
+  /* out to the 02 button's left edge: 655 + 64, less the card's left (121, shifted) and 40 */
+  width: calc(558px - var(--left-shift, -19px));
   animation: copy-in 520ms var(--react-ease) both;
 }
 
@@ -405,7 +438,7 @@
 }
 
 .body {
-  max-width: 450px;
+  text-wrap: balance;
   margin: 0;
   color: var(--navy);
   font: var(--t-body-m); /* Body/M */
@@ -416,8 +449,9 @@
 /* ---- 01 / 02 / 03 ---- */
 
 .buttons {
+  /* 03 ends on the blue box's left edge (783 + 64), like Figma — not shifted with the column */
   left: 655px;
-  top: 417px;
+  top: 384px; /* on the card's top edge */
   display: flex;
 }
 
@@ -552,6 +586,7 @@
 }
 
 .vision[data-layout='mobile'] .scrollStrip,
+.vision[data-layout='mobile'] .gridWindow,
 .vision[data-layout='mobile'] .tab {
   display: none;
 }

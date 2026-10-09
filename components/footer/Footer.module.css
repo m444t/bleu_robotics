@@ -1,8 +1,8 @@
 /*
  * Desktop: the Figma footer (522:4484, 1440 wide) is laid out in design px and
- * scaled by --k. --fp (0 → 1) opens it from 267 to 610 tall; the band's top-anchored
- * parts (links, drawing) stay put, the bottom-anchored ones (line, cells)
- * ride the bottom, so the middle opens up.
+ * scaled by --k. --fp (0 → 1) opens it from 267 to 351 tall; the band's top-anchored
+ * parts (links) stay put, the bottom-anchored ones (line, cells) ride the
+ * bottom, so the middle opens up.
  */
 
 .track {
@@ -17,18 +17,17 @@
      (32 → 92), right items ease from their Figma inset to 92 — the careers column's edges */
   --wide: 0;
   --d: 0px;
-  --art-s: 1;
 
   position: relative;
   /* room for the fully open footer; while it opens, the unused part sits below the viewport */
-  height: calc(610px * var(--k));
+  height: calc(351px * var(--k));
   background: var(--blue);
 }
 
 .footer {
   position: absolute;
   inset: 0 0 auto;
-  height: calc((267px + 343px * var(--fp)) * var(--k));
+  height: calc((267px + 84px * var(--fp)) * var(--k));
   overflow: hidden;
   background: var(--blue);
 }
@@ -45,7 +44,7 @@
   left: 0;
   top: 0;
   width: 1440px;
-  height: calc(267px + 343px * var(--fp));
+  height: calc(267px + 84px * var(--fp));
   transform: scale(var(--k));
   transform-origin: 0 0;
   display: flex;
@@ -62,50 +61,7 @@
   position: absolute;
 }
 
-/* ---- drawing: lives above the horizontal line, revealed as the band opens ---- */
-
-.graphic {
-  left: calc(619px + var(--d));
-  top: 0;
-  width: calc(825.25px * var(--art-s));
-  height: calc(100% - 87.7px);
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.art {
-  position: absolute;
-  left: 0;
-  top: calc(-34px * var(--art-s));
-  width: calc(825.25px * var(--art-s));
-  height: calc(500.34px * var(--art-s));
-}
-
-.svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.labels {
-  opacity: 0;
-  animation: labels-in 320ms var(--ease) var(--labels-at) forwards;
-}
-
-@keyframes labels-in {
-  to {
-    opacity: 1;
-  }
-}
-
-.labelText {
-  fill: #efefef;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-weight: 700;
-}
-
-/* ---- links: top left, where the headline used to be ---- */
+/* ---- links: contact top left; careers in the right panel, left-aligned 32 in from the line ---- */
 
 .links {
   left: calc(32px + var(--d));
@@ -114,6 +70,13 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+}
+
+/* the vertical line is on 670, this box starts at 32 (+ d): 32 past the line */
+.links .careersLink {
+  position: absolute;
+  left: calc(670px - var(--d));
+  top: 0;
 }
 
 .links a {
@@ -128,14 +91,23 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  /* brand orange (contact) and yellow (careers), as the bar's swatches */
   .links a:hover {
-    color: #ffbc2b;
+    color: #fc5c04;
+  }
+
+  .links .careersLink:hover {
+    color: #ffd920;
   }
 }
 
 .links a:focus-visible {
-  outline: 2px solid #ffbc2b;
+  outline: 2px solid #fc5c04;
   outline-offset: 3px;
+}
+
+.links .careersLink:focus-visible {
+  outline-color: #ffd920;
 }
 
 /* ---- grid lines (filled elements with wedge caps, as in the hero) ---- */
@@ -156,7 +128,8 @@
 
 .vLine {
   position: absolute;
-  left: calc(626.5px + var(--d));
+  /* on the careers panel's left edge (670 in the same scaled 1440 frame), centred on it */
+  left: 669.2px;
   top: 0;
   bottom: 0;
   width: 1.6px;
@@ -216,7 +189,7 @@
 }
 
 /* 199 / 197 / 198 wide, then the logo; a vertical line at each cell's left edge
-   (x 32, 231, 428), running between the two horizontal lines */
+   (at 32 at 1440, then each cell's width on), running between the two horizontal lines */
 .cell {
   position: relative;
   display: flex;
@@ -235,16 +208,17 @@
   background: var(--line);
 }
 
+/* Figma's 199 / 197 / 198, stretched so the third ends on the vertical line (670) */
 .cell:nth-child(1) {
-  width: 199px;
+  width: calc((638px - var(--d)) * 199 / 594);
 }
 
 .cell:nth-child(2) {
-  width: 197px;
+  width: calc((638px - var(--d)) * 197 / 594);
 }
 
 .cell:nth-child(3) {
-  width: 198px;
+  width: calc((638px - var(--d)) * 198 / 594);
 }
 
 /* arrow-in-a-box pictogram (same artwork as the Vision tab, turned to point right) */
@@ -289,30 +263,14 @@
   display: none;
 }
 
+/* the one-piece logo (public/icons/logo.svg, 244 × 78) as a light mask, the Figma frame's 109.4 × 35 */
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 2.146px;
-}
-
-.logoMark,
-.logoWord {
   display: block;
+  width: 109.4px;
+  height: 35px;
   background: #ddd;
-}
-
-.logoMark {
-  width: 26.285px;
-  height: 34.879px;
-  mask: url('/icons/logo-mark.svg') center / contain no-repeat;
-  -webkit-mask: url('/icons/logo-mark.svg') center / contain no-repeat;
-}
-
-.logoWord {
-  width: 73.8px;
-  height: 30.7px;
-  mask: url('/icons/logo-word.svg') center / contain no-repeat;
-  -webkit-mask: url('/icons/logo-word.svg') center / contain no-repeat;
+  mask: url('/icons/logo.svg') center / contain no-repeat;
+  -webkit-mask: url('/icons/logo.svg') center / contain no-repeat;
 }
 
 /* ---- bottom bar: barcode, copyright (right-aligned), orange, yellow, in 12px of blue ---- */
@@ -385,8 +343,7 @@
 }
 
 /*
- * links / drawing (48 under the links) / steps (160 under the drawing) /
- * logo + swatches / copyright. The band, cells row and bar dissolve (display: contents) so their
+ * links / steps (160 under the links) / logo + swatches / copyright. The band, cells row and bar dissolve (display: contents) so their
  * pieces sit straight on this grid.
  */
 .track[data-layout='mobile'] .canvas {
@@ -411,27 +368,16 @@
   grid-row: 1;
 }
 
+/* mobile: careers stays stacked under contact */
+.track[data-layout='mobile'] .links .careersLink {
+  position: static;
+}
+
 .track[data-layout='mobile'] .band > * {
   position: relative;
   left: auto;
   top: auto;
   bottom: auto;
-}
-
-/* crop to the drawn part of the illustration (y 123 → 410 of its 500.34) */
-.track[data-layout='mobile'] .graphic {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  width: 100%;
-  height: auto;
-  margin-top: 32px; /* + the 16 row gap = 48 under the links */
-  aspect-ratio: 825.25 / 287;
-}
-
-.track[data-layout='mobile'] .art {
-  top: calc(-123 / 287 * 100%);
-  width: 100%;
-  height: calc(500.34 / 287 * 100%);
 }
 
 .track[data-layout='mobile'] .hLine,
@@ -441,7 +387,7 @@
 }
 
 .track[data-layout='mobile'] .cell {
-  grid-row: 3;
+  grid-row: 2;
   width: auto;
   padding: 6px;
   gap: 6px;
@@ -454,7 +400,7 @@
   margin-left: 0;
 }
 
-/* 160 under the drawing: 144 + the 16 row gap (the logo cell is a .cell too, but sits lower) */
+/* 160 under the links: 144 + the 16 row gap (the logo cell is a .cell too, but sits lower) */
 .track[data-layout='mobile'] .cell:not(.logoCell) {
   margin-top: 144px;
 }
@@ -501,7 +447,7 @@
 
 /* bottom-left logo, the orange + yellow strip on the right of the same row */
 .track[data-layout='mobile'] .logoCell {
-  grid-row: 4;
+  grid-row: 3;
   grid-column: 1 / 3;
   justify-content: flex-start;
   border: 0;
@@ -511,7 +457,7 @@
 
 .track[data-layout='mobile'] .bar > .barOrange,
 .track[data-layout='mobile'] .bar > .barYellow {
-  grid-row: 4;
+  grid-row: 3;
   grid-column: 3;
   justify-self: end;
   align-self: center;
@@ -523,16 +469,10 @@
 }
 
 .track[data-layout='mobile'] .bar > .barText {
-  grid-row: 5;
+  grid-row: 4;
   grid-column: 1 / -1;
   width: auto;
   justify-content: center;
   padding: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .labels {
-    animation: none;
-    opacity: 1;
-  }
-}

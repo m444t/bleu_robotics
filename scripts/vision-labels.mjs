@@ -13,6 +13,9 @@ const figures = JSON.parse(await fs.readFile(FIGURES, 'utf8'));
 const MARGIN = 5;
 // design px cleared along the raster's top and bottom edge
 const EDGE = 6;
+// stray bits of the export to drop, in raster px: the teach frame caught a corner of the
+// text card's isogrid at its bottom left, which then rode over the grey column
+const CLEAR = { teach: [{ x0: 0, x1: 140, y0: 750, y1: 1290 }] };
 
 for (const id of ['teach', 'train', 'operate']) {
   const f = figures[id];
@@ -31,7 +34,9 @@ for (const id of ['teach', 'train', 'operate']) {
   const edge = Math.round((EDGE * info.height) / f.height);
   for (let i = 0; i < info.width * info.height; i++) {
     const y = Math.floor(i / info.width);
-    const cut = y < edge || y >= info.height - edge ? 255 : mask[i];
+    const x = i % info.width;
+    const stray = (CLEAR[id] ?? []).some((r) => x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1);
+    const cut = stray || y < edge || y >= info.height - edge ? 255 : mask[i];
     data[i * 4 + 3] = Math.round((data[i * 4 + 3] * (255 - cut)) / 255);
   }
   const out = `public/vision/${id}-labels.webp`;
